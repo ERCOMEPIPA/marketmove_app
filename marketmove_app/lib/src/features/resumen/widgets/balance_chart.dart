@@ -51,8 +51,6 @@ class BalanceChart extends StatelessWidget {
           barTouchData: BarTouchData(
             enabled: true,
             touchTooltipData: BarTouchTooltipData(
-              backgroundColor: AppColors.surface,
-              tooltipBorder: const BorderSide(color: AppColors.border),
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final item = data[group.x.toInt()];
                 return BarTooltipItem(

@@ -169,8 +169,6 @@ class SalesChart extends StatelessWidget {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              backgroundColor: AppColors.surface,
-              tooltipBorder: const BorderSide(color: AppColors.border),
               getTooltipItems: (touchedSpots) {
                 return touchedSpots.map((spot) {
                   final isVentas = spot.barIndex == 0;

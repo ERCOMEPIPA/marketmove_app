@@ -106,7 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('EEEE, d MMMM yyyy', 'es').format(
+                        DateFormat('EEEE, d MMMM yyyy').format(
                           DateTime.now(),
                         ),
                         style: const TextStyle(

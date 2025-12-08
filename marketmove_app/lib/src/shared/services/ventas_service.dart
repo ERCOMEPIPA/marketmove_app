@@ -126,8 +126,9 @@ class VentasService {
   }) async {
     try {
       final updates = <String, dynamic>{};
-      if (metodoPago != null)
+      if (metodoPago != null) {
         updates['metodo_pago'] = metodoPago.toStringValue();
+      }
       if (notas != null) updates['notas'] = notas;
 
       await _supabase.from('ventas').update(updates).eq('id', ventaId);

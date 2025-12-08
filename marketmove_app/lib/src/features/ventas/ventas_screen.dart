@@ -305,7 +305,7 @@ class _NuevaVentaDialogState extends State<_NuevaVentaDialog> {
   final _notasController = TextEditingController();
 
   List<ProductoModel> _productos = [];
-  List<_ProductoVenta> _productosVenta = [];
+  final List<_ProductoVenta> _productosVenta = [];
   MetodoPago? _metodoPago;
   bool _isLoading = false;
   bool _loadingProductos = true;
@@ -502,7 +502,7 @@ class _NuevaVentaDialogState extends State<_NuevaVentaDialog> {
                                                   DropdownButtonFormField<
                                                     ProductoModel
                                                   >(
-                                                    value: pv.producto,
+                                                    initialValue: pv.producto,
                                                     decoration:
                                                         const InputDecoration(
                                                           labelText: 'Producto',
@@ -560,13 +560,15 @@ class _NuevaVentaDialogState extends State<_NuevaVentaDialog> {
                                                 keyboardType:
                                                     TextInputType.number,
                                                 validator: (value) {
-                                                  if (value?.isEmpty ?? true)
+                                                  if (value?.isEmpty ?? true) {
                                                     return 'Requerido';
+                                                  }
                                                   final cant = int.tryParse(
                                                     value!,
                                                   );
-                                                  if (cant == null || cant <= 0)
+                                                  if (cant == null || cant <= 0) {
                                                     return 'Inválido';
+                                                  }
                                                   if (cant >
                                                       pv.producto.stock) {
                                                     return 'Stock: ${pv.producto.stock}';
@@ -612,7 +614,7 @@ class _NuevaVentaDialogState extends State<_NuevaVentaDialog> {
 
                             // Método de pago
                             DropdownButtonFormField<MetodoPago>(
-                              value: _metodoPago,
+                              initialValue: _metodoPago,
                               decoration: const InputDecoration(
                                 labelText: 'Método de pago',
                                 border: OutlineInputBorder(),

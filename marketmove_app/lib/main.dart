@@ -7,12 +7,14 @@ import 'src/features/ventas/ventas_screen.dart';
 import 'src/features/gastos/gastos_screen.dart';
 import 'src/features/productos/productos_screen.dart';
 import 'src/features/admin/reportes/reportes_screen.dart';
+import 'src/features/superadmin/superadmin_dashboard.dart';
 import 'src/features/cliente/dashboard/cliente_dashboard_screen.dart';
 import 'src/features/cliente/catalogo/catalogo_screen.dart';
 import 'src/features/cliente/compras/mis_compras_screen.dart';
 import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
+import 'src/shared/widgets/superadmin_shell.dart';
 import 'src/shared/widgets/admin_shell.dart';
 import 'src/shared/widgets/cliente_shell.dart';
 import 'src/shared/services/auth_service.dart';
@@ -63,11 +65,14 @@ final GoRouter _router = GoRouter(
     if (isAuthenticated && isLoggingIn) {
       final userRole = await _authService.getCurrentUserRole();
       if (userRole != null) {
-        // Superadmin y Dueños → admin dashboard
-        // Empleados → catálogo
-        return (userRole.isSuperadmin || userRole.isDueno)
-            ? '/admin/dashboard'
-            : '/cliente/catalogo';
+        // Redirigir según el rol específico
+        if (userRole.isSuperadmin) {
+          return '/superadmin/dashboard';
+        } else if (userRole.isDueno) {
+          return '/admin/dashboard';
+        } else {
+          return '/cliente/catalogo';
+        }
       }
     }
 
@@ -79,6 +84,18 @@ final GoRouter _router = GoRouter(
       path: '/login',
       name: 'login',
       builder: (context, state) => const LoginScreen(),
+    ),
+
+    // Rutas de Superadmin
+    ShellRoute(
+      builder: (context, state, child) => SuperadminShell(child: child),
+      routes: [
+        GoRoute(
+          path: '/superadmin/dashboard',
+          name: 'superadmin_dashboard',
+          builder: (context, state) => const SuperadminDashboard(),
+        ),
+      ],
     ),
 
     // Rutas de Admin
