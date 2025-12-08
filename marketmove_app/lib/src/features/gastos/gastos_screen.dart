@@ -415,7 +415,7 @@ class _NuevoGastoDialogState extends State<_NuevoGastoDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _categoriaId,
+                initialValue: _categoriaId,
                 decoration: const InputDecoration(
                   labelText: 'Categoría',
                   border: OutlineInputBorder(),
@@ -436,7 +436,7 @@ class _NuevoGastoDialogState extends State<_NuevoGastoDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<MetodoPago>(
-                value: _metodoPago,
+                initialValue: _metodoPago,
                 decoration: const InputDecoration(
                   labelText: 'Método de pago',
                   border: OutlineInputBorder(),

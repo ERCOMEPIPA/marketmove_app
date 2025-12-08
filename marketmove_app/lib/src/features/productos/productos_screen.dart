@@ -585,7 +585,7 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _categoriaId,
+                initialValue: _categoriaId,
                 decoration: const InputDecoration(
                   labelText: 'Categoría',
                   border: OutlineInputBorder(),

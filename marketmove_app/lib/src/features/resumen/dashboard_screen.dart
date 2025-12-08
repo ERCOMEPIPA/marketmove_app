@@ -3,8 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../shared/services/dashboard_service.dart';
 import '../../shared/services/auth_service.dart';
+import '../../shared/widgets/loading_indicator.dart';
+import '../../shared/constants/app_colors.dart';
+import 'widgets/kpi_card.dart';
+import 'widgets/sales_chart.dart';
+import 'widgets/balance_chart.dart';
 
-/// Pantalla principal - Dashboard con métricas reales
+/// Pantalla principal - Dashboard mejorado con gráficos interactivos
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -41,9 +46,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final metrics = await _dashboardService.getMetrics(user.id);
-      final productosStockBajo = await _dashboardService.getProductosStockBajo(
-        user.id,
-      );
+      final productosStockBajo =
+          await _dashboardService.getProductosStockBajo(user.id);
 
       setState(() {
         _metrics = metrics;
@@ -61,25 +65,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: LoadingIndicator(),
+      );
     }
 
     if (_error != null) {
       return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Error: $_error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadData,
-                child: const Text('Reintentar'),
-              ),
-            ],
-          ),
+        body: ErrorState(
+          message: _error!,
+          onRetry: _loadData,
         ),
       );
     }
@@ -95,268 +90,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Título
-              Text(
-                'Resumen del Negocio',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Métricas de HOY
-              Text(
-                'Hoy',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Ventas',
-                      value: _currencyFormat.format(metrics.ventasHoy),
-                      icon: Icons.trending_up,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Gastos',
-                      value: _currencyFormat.format(metrics.gastosHoy),
-                      icon: Icons.trending_down,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              _buildMetricCard(
-                context,
-                title: 'Ganancia del Día',
-                value: _currencyFormat.format(metrics.gananciaHoy),
-                icon: Icons.account_balance_wallet,
-                color: metrics.gananciaHoy >= 0 ? Colors.blue : Colors.orange,
-                large: true,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Métricas del MES
-              Text(
-                'Este Mes',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Ventas',
-                      value: _currencyFormat.format(metrics.ventasMes),
-                      icon: Icons.point_of_sale,
-                      color: Colors.green,
-                      subtitle: _buildComparison(
-                        metrics.porcentajeCambioVentas,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Gastos',
-                      value: _currencyFormat.format(metrics.gastosMes),
-                      icon: Icons.money_off,
-                      color: Colors.red,
-                      subtitle: _buildComparison(
-                        metrics.porcentajeCambioGastos,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              _buildMetricCard(
-                context,
-                title: 'Ganancia del Mes',
-                value: _currencyFormat.format(metrics.gananciaMes),
-                icon: Icons.savings,
-                color: metrics.gananciaMes >= 0
-                    ? Colors.green.shade700
-                    : Colors.red.shade700,
-                large: true,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Productos
+              // Título y fecha
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Inventario',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Dashboard',
+                        style:
+                            Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('EEEE, d MMMM yyyy', 'es').format(
+                          DateTime.now(),
+                        ),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextButton.icon(
-                    onPressed: () => context.go('/admin/productos'),
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Ver todos'),
+                  IconButton(
+                    onPressed: _loadData,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Actualizar',
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
 
-              Row(
+              // KPI Cards
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.4,
                 children: [
-                  Expanded(
-                    child: _buildInfoCard(
-                      context,
-                      title: 'Total Productos',
-                      value: '${metrics.totalProductos}',
-                      icon: Icons.inventory_2,
-                      color: Colors.blue,
-                    ),
+                  KpiCard(
+                    title: 'Ventas del Mes',
+                    value: _currencyFormat.format(metrics.ventasMes),
+                    icon: Icons.trending_up,
+                    color: AppColors.success,
+                    trend: metrics.porcentajeCambioVentas >= 0
+                        ? '+${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%'
+                        : '${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%',
+                    isPositiveTrend: metrics.porcentajeCambioVentas >= 0,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildInfoCard(
-                      context,
-                      title: 'Stock Bajo',
-                      value: '${metrics.productosStockBajo}',
-                      icon: Icons.warning_amber,
-                      color: metrics.productosStockBajo > 0
-                          ? Colors.orange
-                          : Colors.green,
-                    ),
+                  KpiCard(
+                    title: 'Gastos del Mes',
+                    value: _currencyFormat.format(metrics.gastosMes),
+                    icon: Icons.trending_down,
+                    color: AppColors.error,
+                    trend: metrics.porcentajeCambioGastos >= 0
+                        ? '+${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%'
+                        : '${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%',
+                    isPositiveTrend: metrics.porcentajeCambioGastos < 0,
+                  ),
+                  KpiCard(
+                    title: 'Balance',
+                    value: _currencyFormat.format(metrics.gananciaMes),
+                    icon: Icons.account_balance_wallet,
+                    color: metrics.gananciaMes >= 0
+                        ? AppColors.primary
+                        : AppColors.warning,
+                    subtitle: 'Ventas - Gastos',
+                  ),
+                  KpiCard(
+                    title: 'Productos',
+                    value: '${metrics.totalProductos}',
+                    icon: Icons.inventory_2,
+                    color: AppColors.info,
+                    subtitle: metrics.productosStockBajo > 0
+                        ? '${metrics.productosStockBajo} con stock bajo'
+                        : 'Stock adecuado',
                   ),
                 ],
               ),
+
+              const SizedBox(height: 32),
+
+              // Gráfico de ventas vs gastos
+              Text(
+                'Ventas vs Gastos (Últimos 7 días)',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: SalesChart(
+                  data: _generateSampleSalesData(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const ChartLegend(),
+
+              const SizedBox(height: 32),
+
+              // Gráfico de balance mensual
+              Text(
+                'Balance Mensual',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: BalanceChart(
+                  data: _generateSampleBalanceData(),
+                ),
+              ),
+
+              const SizedBox(height: 32),
 
               // Alertas de stock bajo
               if (_productosStockBajo.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Card(
-                  color: Colors.orange.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.warning_amber,
-                              color: Colors.orange.shade700,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Productos con Stock Bajo',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange.shade900,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ..._productosStockBajo
-                            .take(5)
-                            .map(
-                              (producto) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        producto['nombre'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      'Stock: ${producto['stock']} (mín: ${producto['stock_minimo']})',
-                                      style: TextStyle(
-                                        color: Colors.orange.shade700,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        if (_productosStockBajo.length > 5) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Y ${_productosStockBajo.length - 5} más...',
-                            style: TextStyle(
-                              color: Colors.orange.shade700,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
+                _buildStockBajoSection(),
+                const SizedBox(height: 32),
               ],
-
-              const SizedBox(height: 24),
 
               // Accesos rápidos
               Text(
                 'Accesos Rápidos',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
               const SizedBox(height: 12),
+              _buildQuickAccessButtons(context),
 
-              _buildQuickAccessCard(
-                context,
-                title: 'Registrar Venta',
-                icon: Icons.point_of_sale,
-                color: Colors.green,
-                onTap: () => context.go('/admin/ventas'),
-              ),
-              const SizedBox(height: 8),
-
-              _buildQuickAccessCard(
-                context,
-                title: 'Registrar Gasto',
-                icon: Icons.money_off,
-                color: Colors.red,
-                onTap: () => context.go('/admin/gastos'),
-              ),
-              const SizedBox(height: 8),
-
-              _buildQuickAccessCard(
-                context,
-                title: 'Ver Reportes',
-                icon: Icons.analytics,
-                color: Colors.purple,
-                onTap: () => context.go('/admin/reportes'),
-              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -364,127 +247,222 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMetricCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    Widget? subtitle,
-    bool large = false,
-  }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: EdgeInsets.all(large ? 20.0 : 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _buildStockBajoSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.warning,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.warning_amber,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Productos con Stock Bajo',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.warning,
+                    ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => context.go('/admin/productos'),
+                child: const Text('Ver todos'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...List.generate(
+            _productosStockBajo.length.clamp(0, 5),
+            (index) {
+              final producto = _productosStockBajo[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.warning,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            producto['nombre'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Stock actual: ${producto['stock']} (mínimo: ${producto['stock_minimo']})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Chip(
+                      label: Text(
+                        '${producto['stock']} unid.',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      backgroundColor: AppColors.warning.withOpacity(0.2),
+                      side: BorderSide.none,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          if (_productosStockBajo.length > 5)
+            Center(
+              child: Text(
+                '+${_productosStockBajo.length - 5} productos más',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessButtons(BuildContext context) {
+    final actions = [
+      {
+        'title': 'Registrar Venta',
+        'icon': Icons.add_shopping_cart,
+        'color': AppColors.success,
+        'route': '/admin/ventas',
+      },
+      {
+        'title': 'Registrar Gasto',
+        'icon': Icons.receipt_long,
+        'color': AppColors.error,
+        'route': '/admin/gastos',
+      },
+      {
+        'title': 'Gestionar Productos',
+        'icon': Icons.inventory_2,
+        'color': AppColors.info,
+        'route': '/admin/productos',
+      },
+      {
+        'title': 'Ver Reportes',
+        'icon': Icons.analytics,
+        'color': AppColors.secondary,
+        'route': '/admin/reportes',
+      },
+    ];
+
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 2.5,
+      children: actions.map((action) {
+        return InkWell(
+          onTap: () => context.go(action['route'] as String),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Icon(icon, color: color, size: large ? 32 : 24),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: large ? 18 : 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (action['color'] as Color).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    action['icon'] as IconData,
+                    color: action['color'] as Color,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    action['title'] as String,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: large ? 32 : 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            if (subtitle != null) ...[const SizedBox(height: 4), subtitle],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildComparison(double porcentaje) {
-    final isPositive = porcentaje >= 0;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-          size: 16,
-          color: isPositive ? Colors.green : Colors.red,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${porcentaje.abs().toStringAsFixed(1)}% vs mes anterior',
-          style: TextStyle(
-            fontSize: 12,
-            color: isPositive ? Colors.green : Colors.red,
-            fontWeight: FontWeight.w500,
           ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildQuickAccessCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
-      ),
-    );
+  // Genera datos de ejemplo para el gráfico de ventas
+  // TODO: Reemplazar con datos reales del backend
+  List<SalesChartData> _generateSampleSalesData() {
+    final now = DateTime.now();
+    return List.generate(7, (index) {
+      final date = now.subtract(Duration(days: 6 - index));
+      return SalesChartData(
+        date: date,
+        ventas: 1000 + (index * 200) + (index % 2 * 300),
+        gastos: 500 + (index * 150) + (index % 3 * 200),
+      );
+    });
+  }
+
+  // Genera datos de ejemplo para el gráfico de balance
+  // TODO: Reemplazar con datos reales del backend
+  List<BalanceChartData> _generateSampleBalanceData() {
+    final months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+    return List.generate(6, (index) {
+      final ventas = 5000 + (index * 1000);
+      final gastos = 3000 + (index * 800);
+      return BalanceChartData(
+        month: months[index],
+        balance: (ventas - gastos).toDouble(),
+        ventas: ventas.toDouble(),
+        gastos: gastos.toDouble(),
+      );
+    });
   }
 }

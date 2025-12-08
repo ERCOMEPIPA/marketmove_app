@@ -12,6 +12,7 @@ import 'src/features/cliente/catalogo/catalogo_screen.dart';
 import 'src/features/cliente/compras/mis_compras_screen.dart';
 import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
 import 'src/shared/config/supabase_config.dart';
+import 'src/shared/config/theme_config.dart';
 import 'src/shared/widgets/admin_shell.dart';
 import 'src/shared/widgets/cliente_shell.dart';
 import 'src/shared/services/auth_service.dart';
@@ -40,14 +41,7 @@ class MarketMoveApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'MarketMove',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
-      ),
+      theme: ThemeConfig.lightTheme,
       routerConfig: _router,
     );
   }
@@ -122,7 +116,7 @@ final GoRouter _router = GoRouter(
     // Rutas de Cliente
     ShellRoute(
       builder: (context, state, child) =>
-          ClienteShell(child: child, location: state.uri.path),
+          ClienteShell(location: state.uri.path, child: child),
       routes: [
         GoRoute(
           path: '/cliente/dashboard',
