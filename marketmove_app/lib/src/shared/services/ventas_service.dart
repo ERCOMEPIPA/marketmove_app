@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/venta_model.dart';
-import '../models/producto_model.dart';
 import 'productos_service.dart';
 
 /// Servicio para gestionar ventas

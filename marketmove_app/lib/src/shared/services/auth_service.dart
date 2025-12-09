@@ -42,13 +42,14 @@ class AuthService {
   }
 
   /// Registra un nuevo usuario
-  /// Por defecto, los usuarios se registran como 'empleado'
+  /// Por defecto, los usuarios se registran como 'dueno' (dueño de negocio)
+  /// Solo el SUPERADMIN puede crear nuevos superadmins
   Future<UserProfileModel> signUp({
     required String email,
     required String password,
     String? nombreNegocio,
     String? telefono,
-    UserRole rol = UserRole.empleado,
+    UserRole rol = UserRole.dueno,
   }) async {
     try {
       // Crear usuario en auth

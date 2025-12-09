@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../services/cart_service.dart';
 
-/// Shell/Layout para las vistas de cliente
+/// Shell/Layout para las vistas de empleado
 /// Incluye un BottomNavigationBar para navegación entre secciones
 class ClienteShell extends StatefulWidget {
   final Widget child;
@@ -16,6 +18,10 @@ class ClienteShell extends StatefulWidget {
 class _ClienteShellState extends State<ClienteShell> {
   int _getCurrentIndex() {
     final location = widget.location;
+    if (location.startsWith('/empleado/catalogo')) return 0;
+    if (location.startsWith('/empleado/compras')) return 1;
+    if (location.startsWith('/empleado/perfil')) return 2;
+    // Compatibilidad legacy
     if (location.startsWith('/cliente/catalogo')) return 0;
     if (location.startsWith('/cliente/compras')) return 1;
     if (location.startsWith('/cliente/perfil')) return 2;
@@ -25,13 +31,13 @@ class _ClienteShellState extends State<ClienteShell> {
   void _onItemTapped(int index) {
     switch (index) {
       case 0:
-        context.go('/cliente/catalogo');
+        context.go('/empleado/catalogo');
         break;
       case 1:
-        context.go('/cliente/compras');
+        context.go('/empleado/compras');
         break;
       case 2:
-        context.go('/cliente/perfil');
+        context.go('/empleado/perfil');
         break;
     }
   }
@@ -43,6 +49,46 @@ class _ClienteShellState extends State<ClienteShell> {
         title: const Text('MarketMove'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          // Botón del carrito
+          Consumer<CartService>(
+            builder: (context, cartService, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () => context.go('/empleado/carrito'),
+                    icon: const Icon(Icons.shopping_cart),
+                  ),
+                  if (cartService.itemCount > 0)
+                    Positioned(
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          '${cartService.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(

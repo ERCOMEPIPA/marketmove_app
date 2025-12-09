@@ -1,9 +1,107 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/producto_model.dart';
 
-/// Servicio para gestionar productos
-class ProductosService {
+/// Servicio para gestionar productos con estado reactivo
+class ProductosService extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  List<ProductoModel> _productos = [];
+  List<ProductoModel> _productosFiltrados = [];
+  List<CategoriaModel> _categorias = [];
+  String _selectedCategory = 'Todos';
+  String _searchQuery = '';
+  bool _isLoading = false;
+  String? _error;
+
+  // Getters
+  List<ProductoModel> get productos => _productosFiltrados;
+  List<CategoriaModel> get categorias => _categorias;
+  String get selectedCategory => _selectedCategory;
+  String get searchQuery => _searchQuery;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  /// Carga los productos disponibles para empleados
+  Future<void> loadProductosForEmployee(String ownerUserId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Cargar productos activos del dueño con stock > 0
+      final response = await _supabase
+          .from('productos')
+          .select('*, categorias(*)')
+          .eq('user_id', ownerUserId)
+          .eq('activo', true)
+          .gt('stock', 0)
+          .order('nombre', ascending: true);
+
+      _productos = (response as List)
+          .map((json) => ProductoModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      // Extraer categorías únicas
+      final categoriaSet = <String>{};
+      for (var p in _productos) {
+        categoriaSet.add(p.categoria?.nombre ?? 'Sin categoría');
+      }
+      _categorias = categoriaSet
+          .map((name) => CategoriaModel(
+                id: '',
+                userId: ownerUserId,
+                nombre: name,
+                tipo: 'producto',
+                color: '#6366f1',
+                createdAt: DateTime.now(),
+              ))
+          .toList();
+      _categorias.insert(0, CategoriaModel(
+        id: '',
+        userId: ownerUserId,
+        nombre: 'Todos',
+        tipo: 'producto',
+        color: '#6366f1',
+        createdAt: DateTime.now(),
+      ));
+
+      _applyFilters();
+      _error = null;
+    } catch (e) {
+      _error = 'Error al cargar productos: $e';
+      _productosFiltrados = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Establece la categoría seleccionada
+  void setSelectedCategory(String category) {
+    _selectedCategory = category;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  /// Establece la búsqueda
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  /// Aplica filtros de categoría y búsqueda
+  void _applyFilters() {
+    _productosFiltrados = _productos.where((producto) {
+      final matchCategory = _selectedCategory == 'Todos' ||
+          producto.categoria?.nombre == _selectedCategory;
+      final matchSearch = producto.nombre
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase());
+      return matchCategory && matchSearch;
+    }).toList();
+  }
 
   /// Obtiene todos los productos del usuario
   Future<List<ProductoModel>> getProductos(

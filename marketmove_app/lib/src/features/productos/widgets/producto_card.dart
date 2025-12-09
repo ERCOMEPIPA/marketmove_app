@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 /// Card para mostrar un producto en grid o lista
 class ProductoCard extends StatelessWidget {
-  final Producto producto;
+  final ProductoModel producto;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;

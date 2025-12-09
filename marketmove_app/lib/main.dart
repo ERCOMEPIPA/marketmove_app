@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import 'src/features/auth/login_screen.dart';
 import 'src/features/resumen/dashboard_screen.dart';
 import 'src/features/ventas/ventas_screen.dart';
@@ -8,16 +9,19 @@ import 'src/features/gastos/gastos_screen.dart';
 import 'src/features/productos/productos_screen.dart';
 import 'src/features/admin/reportes/reportes_screen.dart';
 import 'src/features/superadmin/superadmin_dashboard.dart';
-import 'src/features/cliente/dashboard/cliente_dashboard_screen.dart';
 import 'src/features/cliente/catalogo/catalogo_screen.dart';
 import 'src/features/cliente/compras/mis_compras_screen.dart';
 import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
+import 'src/features/cliente/carrito/carrito_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
 import 'src/shared/widgets/superadmin_shell.dart';
 import 'src/shared/widgets/admin_shell.dart';
 import 'src/shared/widgets/cliente_shell.dart';
 import 'src/shared/services/auth_service.dart';
+import 'src/shared/services/cart_service.dart';
+import 'src/shared/services/orders_service.dart';
+import 'src/shared/services/productos_service.dart';
 
 // Instancia global del servicio de autenticación
 final _authService = AuthService();
@@ -40,11 +44,18 @@ class MarketMoveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'MarketMove',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeConfig.lightTheme,
-      routerConfig: _router,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => CartService()),
+        ChangeNotifierProvider(create: (context) => OrdersService()),
+        ChangeNotifierProvider(create: (context) => ProductosService()),
+      ],
+      child: MaterialApp.router(
+        title: 'MarketMove',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeConfig.lightTheme,
+        routerConfig: _router,
+      ),
     );
   }
 }
@@ -70,8 +81,8 @@ final GoRouter _router = GoRouter(
           return '/superadmin/dashboard';
         } else if (userRole.isDueno) {
           return '/admin/dashboard';
-        } else {
-          return '/cliente/catalogo';
+        } else if (userRole.isEmpleado) {
+          return '/empleado/catalogo';
         }
       }
     }
@@ -98,7 +109,7 @@ final GoRouter _router = GoRouter(
       ],
     ),
 
-    // Rutas de Admin
+    // Rutas de Admin (Dueño del negocio)
     ShellRoute(
       builder: (context, state, child) => AdminShell(child: child),
       routes: [
@@ -130,30 +141,30 @@ final GoRouter _router = GoRouter(
       ],
     ),
 
-    // Rutas de Cliente
+    // Rutas de Empleado (Cliente/Trabajador)
     ShellRoute(
       builder: (context, state, child) =>
           ClienteShell(location: state.uri.path, child: child),
       routes: [
         GoRoute(
-          path: '/cliente/dashboard',
-          name: 'cliente_dashboard',
-          builder: (context, state) => const ClienteDashboardScreen(),
-        ),
-        GoRoute(
-          path: '/cliente/catalogo',
-          name: 'cliente_catalogo',
+          path: '/empleado/catalogo',
+          name: 'empleado_catalogo',
           builder: (context, state) => const CatalogoScreen(),
         ),
         GoRoute(
-          path: '/cliente/compras',
-          name: 'cliente_compras',
+          path: '/empleado/compras',
+          name: 'empleado_compras',
           builder: (context, state) => const MisComprasScreen(),
         ),
         GoRoute(
-          path: '/cliente/perfil',
-          name: 'cliente_perfil',
+          path: '/empleado/perfil',
+          name: 'empleado_perfil',
           builder: (context, state) => const PerfilClienteScreen(),
+        ),
+        GoRoute(
+          path: '/empleado/carrito',
+          name: 'empleado_carrito',
+          builder: (context, state) => const CarritoScreen(),
         ),
       ],
     ),
@@ -168,6 +179,19 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/productos',
       redirect: (context, state) => '/admin/productos',
+    ),
+    // Rutas legacy de cliente
+    GoRoute(
+      path: '/cliente/catalogo',
+      redirect: (context, state) => '/empleado/catalogo',
+    ),
+    GoRoute(
+      path: '/cliente/compras',
+      redirect: (context, state) => '/empleado/compras',
+    ),
+    GoRoute(
+      path: '/cliente/perfil',
+      redirect: (context, state) => '/empleado/perfil',
     ),
   ],
 );
