@@ -167,4 +167,13 @@ class AuthService {
       return null;
     }
   }
+
+  /// Actualiza la contraseña del usuario actual
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _supabase.auth.updateUser(UserAttributes(password: newPassword));
+    } catch (e) {
+      throw Exception('Error al actualizar contraseña: $e');
+    }
+  }
 }

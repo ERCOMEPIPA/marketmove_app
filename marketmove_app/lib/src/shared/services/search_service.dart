@@ -9,6 +9,7 @@ class SearchResult {
   final String categoria;
   final int stock;
   final double relevancia; // Score de 0.0 a 1.0
+  final String? imagenUrl;
 
   SearchResult({
     required this.id,
@@ -17,6 +18,7 @@ class SearchResult {
     required this.categoria,
     required this.stock,
     required this.relevancia,
+    this.imagenUrl,
   });
 }
 
@@ -117,9 +119,12 @@ class SearchService extends ChangeNotifier {
 
     var results = productos.where((producto) {
       // Filtro por texto
-      final matchesQuery = query.isEmpty ||
+      final matchesQuery =
+          query.isEmpty ||
           producto.nombre.toLowerCase().contains(query.toLowerCase()) ||
-          (producto.descripcion?.toLowerCase() ?? '').contains(query.toLowerCase());
+          (producto.descripcion?.toLowerCase() ?? '').contains(
+            query.toLowerCase(),
+          );
 
       // Filtro por rango de precio
       final matchesPrice =
@@ -130,16 +135,13 @@ class SearchService extends ChangeNotifier {
       final matchesCategory =
           filters.category == null ||
           filters.category!.isEmpty ||
-          (producto.categoria?.nombre ?? '').toLowerCase() == (filters.category?.toLowerCase() ?? '');
+          (producto.categoria?.nombre ?? '').toLowerCase() ==
+              (filters.category?.toLowerCase() ?? '');
 
       // Filtro por stock
-      final matchesStock =
-          !filters.inStockOnly || producto.stock > 0;
+      final matchesStock = !filters.inStockOnly || producto.stock > 0;
 
-      return matchesQuery &&
-          matchesPrice &&
-          matchesCategory &&
-          matchesStock;
+      return matchesQuery && matchesPrice && matchesCategory && matchesStock;
     }).toList();
 
     // Calcular relevancia basada en la coincidencia de búsqueda
@@ -151,7 +153,9 @@ class SearchService extends ChangeNotifier {
         relevancia = 1.0;
       }
       // Reducir si solo aparece en la descripción
-      else if ((producto.descripcion?.toLowerCase() ?? '').contains(query.toLowerCase())) {
+      else if ((producto.descripcion?.toLowerCase() ?? '').contains(
+        query.toLowerCase(),
+      )) {
         relevancia = 0.7;
       }
       // Muy baja relevancia para coincidencias parciales
@@ -166,6 +170,7 @@ class SearchService extends ChangeNotifier {
         categoria: producto.categoria?.nombre ?? 'Sin categoría',
         stock: producto.stock,
         relevancia: relevancia,
+        imagenUrl: producto.imagenUrl,
       );
     }).toList();
 
@@ -210,7 +215,9 @@ class SearchService extends ChangeNotifier {
         suggestions.add(producto.nombre);
       }
       if (producto.categoria?.nombre != null) {
-        if (producto.categoria!.nombre.toLowerCase().contains(input.toLowerCase())) {
+        if (producto.categoria!.nombre.toLowerCase().contains(
+          input.toLowerCase(),
+        )) {
           suggestions.add(producto.categoria!.nombre);
         }
       }

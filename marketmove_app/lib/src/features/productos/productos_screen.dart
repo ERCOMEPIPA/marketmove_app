@@ -1,5 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../shared/models/producto_model.dart';
 import '../../shared/services/productos_service.dart';
 import '../../shared/services/auth_service.dart';
@@ -393,6 +396,12 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
   String? _categoriaId;
   bool _isLoading = false;
 
+  // Variables para imagen
+  Uint8List? _imagenBytes;
+  String? _imagenNombre;
+  String? _imagenUrl;
+  bool _isUploadingImage = false;
+
   @override
   void initState() {
     super.initState();
@@ -413,6 +422,7 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
       text: widget.producto?.codigoBarras,
     );
     _categoriaId = widget.producto?.categoriaId;
+    _imagenUrl = widget.producto?.imagenUrl;
   }
 
   @override
@@ -424,6 +434,69 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
     _stockMinimoController.dispose();
     _codigoBarrasController.dispose();
     super.dispose();
+  }
+
+  /// Selecciona una imagen y la sube a Supabase Storage
+  Future<void> _seleccionarImagen() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      if (file.bytes == null) return;
+
+      setState(() {
+        _imagenBytes = file.bytes;
+        _imagenNombre = file.name;
+        _isUploadingImage = true;
+      });
+
+      // Subir a Supabase Storage
+      final userId = _authService.currentUser!.id;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = file.extension ?? 'jpg';
+      final fileName = 'productos/${userId}_$timestamp.$extension';
+
+      final supabase = Supabase.instance.client;
+
+      await supabase.storage
+          .from('productos')
+          .uploadBinary(fileName, file.bytes!);
+
+      // Obtener URL pública
+      final publicUrl = supabase.storage
+          .from('productos')
+          .getPublicUrl(fileName);
+
+      setState(() {
+        _imagenUrl = publicUrl;
+        _isUploadingImage = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Imagen subida correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isUploadingImage = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al subir imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _guardar() async {
@@ -449,6 +522,7 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
           codigoBarras: _codigoBarrasController.text.trim().isEmpty
               ? null
               : _codigoBarrasController.text.trim(),
+          imagenUrl: _imagenUrl,
         );
       } else {
         // Actualizar existente
@@ -465,6 +539,7 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
           codigoBarras: _codigoBarrasController.text.trim().isEmpty
               ? null
               : _codigoBarrasController.text.trim(),
+          imagenUrl: _imagenUrl,
         );
       }
 
@@ -499,112 +574,223 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
       title: Text(
         widget.producto == null ? 'Nuevo Producto' : 'Editar Producto',
       ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre *',
-                  border: OutlineInputBorder(),
+      content: SizedBox(
+        width: 400,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nombreController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre *',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Requerido' : null,
                 ),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descripcionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _descripcionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Descripción',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
                 ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _precioController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio *',
-                  prefixText: '€ ',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _precioController,
+                  decoration: const InputDecoration(
+                    labelText: 'Precio *',
+                    prefixText: '€ ',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) return 'Requerido';
+                    if (double.tryParse(value!) == null)
+                      return 'Número inválido';
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Requerido';
-                  if (double.tryParse(value!) == null) return 'Número inválido';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stock *',
-                        border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _stockController,
+                        decoration: const InputDecoration(
+                          labelText: 'Stock *',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) return 'Requerido';
+                          if (int.tryParse(value!) == null) return 'Inválido';
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Requerido';
-                        if (int.tryParse(value!) == null) return 'Inválido';
-                        return null;
-                      },
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockMinimoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stock mínimo *',
-                        border: OutlineInputBorder(),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _stockMinimoController,
+                        decoration: const InputDecoration(
+                          labelText: 'Stock mínimo *',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) return 'Requerido';
+                          if (int.tryParse(value!) == null) return 'Inválido';
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Requerido';
-                        if (int.tryParse(value!) == null) return 'Inválido';
-                        return null;
-                      },
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _codigoBarrasController,
-                decoration: const InputDecoration(
-                  labelText: 'Código de barras',
-                  border: OutlineInputBorder(),
-                  helperText: 'Opcional',
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _categoriaId,
-                decoration: const InputDecoration(
-                  labelText: 'Categoría',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text('Sin categoría'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _codigoBarrasController,
+                  decoration: const InputDecoration(
+                    labelText: 'Código de barras',
+                    border: OutlineInputBorder(),
+                    helperText: 'Opcional',
                   ),
-                  ...widget.categorias.map(
-                    (cat) => DropdownMenuItem(
-                      value: cat.id,
-                      child: Text(cat.nombre),
+                ),
+                const SizedBox(height: 12),
+
+                // Selector de imagen
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[400]!),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Imagen del producto',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Preview de imagen
+                      if (_imagenUrl != null && _imagenUrl!.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            _imagenUrl!,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              height: 120,
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.broken_image, size: 40),
+                              ),
+                            ),
+                          ),
+                        )
+                      else if (_imagenBytes != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            _imagenBytes!,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      else
+                        Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.add_photo_alternate,
+                              size: 40,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 8),
+
+                      // Botón para seleccionar imagen
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isUploadingImage
+                              ? null
+                              : _seleccionarImagen,
+                          icon: _isUploadingImage
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.upload, size: 18),
+                          label: Text(
+                            _isUploadingImage
+                                ? 'Subiendo...'
+                                : (_imagenUrl != null
+                                      ? 'Cambiar imagen'
+                                      : 'Seleccionar imagen'),
+                          ),
+                        ),
+                      ),
+
+                      if (_imagenNombre != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            _imagenNombre!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _categoriaId,
+                  decoration: const InputDecoration(
+                    labelText: 'Categoría',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('Sin categoría'),
                     ),
-                  ),
-                ],
-                onChanged: (value) => setState(() => _categoriaId = value),
-              ),
-            ],
+                    ...widget.categorias.map(
+                      (cat) => DropdownMenuItem(
+                        value: cat.id,
+                        child: Text(cat.nombre),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) => setState(() => _categoriaId = value),
+                ),
+              ],
+            ),
           ),
         ),
       ),

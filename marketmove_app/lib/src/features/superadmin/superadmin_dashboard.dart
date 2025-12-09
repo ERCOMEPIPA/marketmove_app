@@ -164,7 +164,19 @@ class _SuperadminDashboardState extends State<SuperadminDashboard> {
                   Icons.business,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricItem(
+                  'Empleados',
+                  '${metrics.totalEmpleados}',
+                  Icons.people,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
               Expanded(
                 child: _buildMetricItem(
                   'Ventas Totales',
@@ -172,13 +184,15 @@ class _SuperadminDashboardState extends State<SuperadminDashboard> {
                   Icons.attach_money,
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricItem(
+                  'Productos',
+                  '${metrics.totalProductos}',
+                  Icons.inventory_2,
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          _buildMetricItem(
-            'Productos Totales',
-            '${metrics.totalProductos}',
-            Icons.inventory_2,
           ),
         ],
       ),

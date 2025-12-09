@@ -170,16 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Link para registro (MVP - sin implementar)
+                  // Link para registro
                   TextButton(
-                    onPressed: () {
-                      // TODO: Navegar a pantalla de registro
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Registro - Próximamente'),
-                        ),
-                      );
-                    },
+                    onPressed: () => context.go('/register'),
                     child: const Text('¿No tienes cuenta? Regístrate'),
                   ),
                 ],

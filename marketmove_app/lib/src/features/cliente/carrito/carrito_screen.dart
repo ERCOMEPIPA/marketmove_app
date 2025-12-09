@@ -10,7 +10,10 @@ import '../../../shared/services/auth_service.dart';
 
 /// Pantalla de carrito de compras
 class CarritoScreen extends StatelessWidget {
-  static final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
+  static final _currencyFormat = NumberFormat.currency(
+    symbol: '€',
+    decimalDigits: 2,
+  );
 
   const CarritoScreen({super.key});
 
@@ -38,9 +41,7 @@ class CarritoScreen extends StatelessWidget {
                         children: [
                           Text(
                             'Mi Carrito',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineLarge
+                            style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
@@ -131,7 +132,9 @@ class CarritoScreen extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text('Subtotal:'),
-                                  Text(_currencyFormat.format(cartService.total)),
+                                  Text(
+                                    _currencyFormat.format(cartService.total),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -159,8 +162,9 @@ class CarritoScreen extends StatelessWidget {
                                 children: [
                                   const Text(
                                     'Total:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   Text(
                                     _currencyFormat.format(cartService.total),
@@ -182,12 +186,15 @@ class CarritoScreen extends StatelessWidget {
                           onPressed: () async {
                             try {
                               final authService = AuthService();
-                              final currentUser = Supabase.instance.client.auth.currentUser;
-                              
+                              final currentUser =
+                                  Supabase.instance.client.auth.currentUser;
+
                               if (currentUser == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Error: Usuario no autenticado'),
+                                    content: Text(
+                                      'Error: Usuario no autenticado',
+                                    ),
                                     backgroundColor: AppColors.error,
                                   ),
                                 );
@@ -202,13 +209,16 @@ class CarritoScreen extends StatelessWidget {
                                   .single();
 
                               final userId = currentUser.id;
-                              final negocioId = profile['negocio_id'] as String?;
+                              final negocioId =
+                                  profile['negocio_id'] as String?;
 
                               if (negocioId == null) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Error: No se encontró el negocio'),
+                                    content: Text(
+                                      'Error: No se encontró el negocio',
+                                    ),
                                     backgroundColor: AppColors.error,
                                   ),
                                 );
@@ -216,15 +226,18 @@ class CarritoScreen extends StatelessWidget {
                               }
 
                               // Guardar la orden en Supabase
-                              final ordersService = context.read<OrdersService>();
+                              final ordersService = context
+                                  .read<OrdersService>();
                               await ordersService.addOrderFromCart(
                                 cartService.items
-                                    .map((item) => {
-                                          'nombre': item.nombre,
-                                          'cantidad': item.cantidad,
-                                          'precio': item.precio,
-                                          'imagen': item.imagen,
-                                        })
+                                    .map(
+                                      (item) => {
+                                        'nombre': item.nombre,
+                                        'cantidad': item.cantidad,
+                                        'precio': item.precio,
+                                        'imagen': item.imagen,
+                                      },
+                                    )
                                     .toList(),
                                 cartService.total,
                                 userId,
@@ -235,7 +248,9 @@ class CarritoScreen extends StatelessWidget {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Pedido realizado exitosamente'),
+                                  content: Text(
+                                    'Pedido realizado exitosamente',
+                                  ),
                                   backgroundColor: AppColors.success,
                                 ),
                               );
@@ -278,7 +293,10 @@ class CarritoScreen extends StatelessWidget {
   }
 
   Widget _buildCartItem(
-      BuildContext context, CartService cartService, CartItem item) {
+    BuildContext context,
+    CartService cartService,
+    CartItem item,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -286,18 +304,31 @@ class CarritoScreen extends StatelessWidget {
         child: Row(
           children: [
             // Imagen
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 80,
+                height: 80,
                 color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  item.imagen,
-                  style: const TextStyle(fontSize: 32),
-                ),
+                child: item.imagen.isNotEmpty && item.imagen.startsWith('http')
+                    ? Image.network(
+                        item.imagen,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Icon(
+                            Icons.inventory_2,
+                            color: Colors.grey[400],
+                            size: 32,
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.inventory_2,
+                          color: Colors.grey[400],
+                          size: 32,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(width: 12),

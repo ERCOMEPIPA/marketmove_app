@@ -47,15 +47,33 @@ class SuperadminShell extends StatelessWidget {
             ),
             _buildDrawerItem(
               context: context,
-              icon: Icons.business,
-              title: 'Negocios Registrados',
+              icon: Icons.dashboard,
+              title: 'Dashboard',
               route: '/superadmin/dashboard',
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'GESTIÓN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
             ),
             _buildDrawerItem(
               context: context,
-              icon: Icons.analytics,
-              title: 'Métricas Globales',
-              route: '/superadmin/metricas',
+              icon: Icons.business,
+              title: 'Dueños/Negocios',
+              route: '/superadmin/duenos',
+            ),
+            _buildDrawerItem(
+              context: context,
+              icon: Icons.subscriptions,
+              title: 'Planes',
+              route: '/superadmin/planes',
             ),
             const Divider(),
             ListTile(

@@ -72,8 +72,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            selectedMinPrice =
-                                double.tryParse(value) ?? 0.0;
+                            selectedMinPrice = double.tryParse(value) ?? 0.0;
                           });
                         },
                       ),
@@ -92,8 +91,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            selectedMaxPrice = double.tryParse(value) ??
-                                double.infinity;
+                            selectedMaxPrice =
+                                double.tryParse(value) ?? double.infinity;
                           });
                         },
                       ),
@@ -116,10 +115,9 @@ class _SearchScreenState extends State<SearchScreen> {
                       value: null,
                       child: Text('Todas las categorías'),
                     ),
-                    ...categories.map((cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat),
-                        )),
+                    ...categories.map(
+                      (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+                    ),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -189,9 +187,7 @@ class _SearchScreenState extends State<SearchScreen> {
               groupValue: _currentFilters.sortBy,
               onChanged: (value) {
                 if (value != null) {
-                  _currentFilters = _currentFilters.copyWith(
-                    sortBy: value,
-                  );
+                  _currentFilters = _currentFilters.copyWith(sortBy: value);
                   _searchService.updateFilters(_currentFilters);
                   Navigator.pop(context);
                 }
@@ -203,9 +199,7 @@ class _SearchScreenState extends State<SearchScreen> {
               groupValue: _currentFilters.sortBy,
               onChanged: (value) {
                 if (value != null) {
-                  _currentFilters = _currentFilters.copyWith(
-                    sortBy: value,
-                  );
+                  _currentFilters = _currentFilters.copyWith(sortBy: value);
                   _searchService.updateFilters(_currentFilters);
                   Navigator.pop(context);
                 }
@@ -217,9 +211,7 @@ class _SearchScreenState extends State<SearchScreen> {
               groupValue: _currentFilters.sortBy,
               onChanged: (value) {
                 if (value != null) {
-                  _currentFilters = _currentFilters.copyWith(
-                    sortBy: value,
-                  );
+                  _currentFilters = _currentFilters.copyWith(sortBy: value);
                   _searchService.updateFilters(_currentFilters);
                   Navigator.pop(context);
                 }
@@ -231,9 +223,7 @@ class _SearchScreenState extends State<SearchScreen> {
               groupValue: _currentFilters.sortBy,
               onChanged: (value) {
                 if (value != null) {
-                  _currentFilters = _currentFilters.copyWith(
-                    sortBy: value,
-                  );
+                  _currentFilters = _currentFilters.copyWith(sortBy: value);
                   _searchService.updateFilters(_currentFilters);
                   Navigator.pop(context);
                 }
@@ -254,10 +244,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buscar productos'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Buscar productos'), elevation: 0),
       body: Column(
         children: [
           // Barra de búsqueda
@@ -318,9 +305,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Consumer<SearchService>(
               builder: (context, searchService, _) {
                 if (searchService.isSearching) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (searchService.results.isEmpty &&
@@ -352,11 +337,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.search,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
+                        Icon(Icons.search, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
                           'Escribe para buscar productos',
@@ -397,15 +378,27 @@ class SearchResultCard extends StatelessWidget {
   final SearchResult result;
   final VoidCallback? onTap;
 
-  const SearchResultCard({
-    super.key,
-    required this.result,
-    this.onTap,
-  });
+  const SearchResultCard({super.key, required this.result, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 56,
+          height: 56,
+          color: Colors.grey[100],
+          child: result.imagenUrl != null && result.imagenUrl!.isNotEmpty
+              ? Image.network(
+                  result.imagenUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.inventory_2, color: Colors.grey[400]),
+                )
+              : Icon(Icons.inventory_2, color: Colors.grey[400]),
+        ),
+      ),
       title: Text(result.nombre),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,19 +423,14 @@ class SearchResultCard extends StatelessWidget {
                 'Stock: ${result.stock}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: result.stock > 0
-                      ? Colors.green
-                      : Colors.red,
+                  color: result.stock > 0 ? Colors.green : Colors.red,
                 ),
               ),
             ],
           ),
         ],
       ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: Colors.grey[400],
-      ),
+      trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
       onTap: onTap,
     );
   }

@@ -3,17 +3,22 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'src/features/auth/login_screen.dart';
+import 'src/features/auth/register_screen.dart';
 import 'src/features/resumen/dashboard_screen.dart';
 import 'src/features/ventas/ventas_screen.dart';
 import 'src/features/gastos/gastos_screen.dart';
 import 'src/features/productos/productos_screen.dart';
 import 'src/features/admin/reportes/reportes_screen.dart';
-import 'src/features/superadmin/superadmin_dashboard.dart';
+import 'src/features/admin/clientes/clientes_screen.dart';
+import 'src/features/admin/pipeline/pipeline_screen.dart';
+import 'src/features/superadmin/superadmin_dashboard_v2.dart';
+import 'src/features/superadmin/planes_screen.dart';
 import 'src/features/cliente/catalogo/catalogo_screen.dart';
 import 'src/features/cliente/compras/mis_compras_screen.dart';
 import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
 import 'src/features/cliente/carrito/carrito_screen.dart';
 import 'src/features/cliente/search/search_screen.dart';
+import 'src/features/cliente/dashboard/cliente_dashboard_screen.dart';
 import 'src/features/notificaciones/notificaciones_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
@@ -60,9 +65,7 @@ class MarketMoveApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (context) => ProductosService()),
         ChangeNotifierProvider(
-          create: (context) => SearchService(
-            context.read<ProductosService>(),
-          ),
+          create: (context) => SearchService(context.read<ProductosService>()),
         ),
         ChangeNotifierProvider(create: (context) => ReportsService()),
       ],
@@ -90,9 +93,10 @@ final GoRouter _router = GoRouter(
   redirect: (context, state) async {
     final isAuthenticated = _authService.isAuthenticated;
     final isLoggingIn = state.uri.path == '/login';
+    final isRegistering = state.uri.path == '/register';
 
-    // Si no está autenticado y no está en login, redirigir a login
-    if (!isAuthenticated && !isLoggingIn) {
+    // Si no está autenticado y no está en login/register, redirigir a login
+    if (!isAuthenticated && !isLoggingIn && !isRegistering) {
       return '/login';
     }
 
@@ -121,6 +125,13 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const LoginScreen(),
     ),
 
+    // Ruta de registro
+    GoRoute(
+      path: '/register',
+      name: 'register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+
     // Rutas de Superadmin
     ShellRoute(
       builder: (context, state, child) => SuperadminShell(child: child),
@@ -128,7 +139,18 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: '/superadmin/dashboard',
           name: 'superadmin_dashboard',
-          builder: (context, state) => const SuperadminDashboard(),
+          builder: (context, state) => const SuperadminDashboardV2(),
+        ),
+        GoRoute(
+          path: '/superadmin/duenos',
+          name: 'superadmin_duenos',
+          builder: (context, state) =>
+              const SuperadminDashboardV2(), // Mismo dashboard muestra dueños
+        ),
+        GoRoute(
+          path: '/superadmin/planes',
+          name: 'superadmin_planes',
+          builder: (context, state) => const PlanesScreen(),
         ),
       ],
     ),
@@ -141,6 +163,22 @@ final GoRouter _router = GoRouter(
           path: '/admin/dashboard',
           name: 'admin_dashboard',
           builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/admin/clientes',
+          name: 'admin_clientes',
+          builder: (context, state) {
+            final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+            return ClientesScreen(negocioId: userId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/pipeline',
+          name: 'admin_pipeline',
+          builder: (context, state) {
+            final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+            return PipelineScreen(negocioId: userId);
+          },
         ),
         GoRoute(
           path: '/admin/productos',

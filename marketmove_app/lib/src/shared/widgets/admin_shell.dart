@@ -49,11 +49,7 @@ class AdminShell extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(
-                    Icons.store,
-                    size: 48,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.store, size: 48, color: Colors.white),
                   SizedBox(height: 8),
                   Text(
                     'Panel del Dueño',
@@ -71,6 +67,42 @@ class AdminShell extends StatelessWidget {
               icon: Icons.dashboard,
               title: 'Dashboard',
               route: '/admin/dashboard',
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'CRM',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            _buildDrawerItem(
+              context: context,
+              icon: Icons.people,
+              title: 'Clientes',
+              route: '/admin/clientes',
+            ),
+            _buildDrawerItem(
+              context: context,
+              icon: Icons.view_kanban,
+              title: 'Pipeline',
+              route: '/admin/pipeline',
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'INVENTARIO',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
             ),
             _buildDrawerItem(
               context: context,

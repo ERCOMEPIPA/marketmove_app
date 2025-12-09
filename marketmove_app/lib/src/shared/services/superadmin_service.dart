@@ -34,28 +34,46 @@ class SuperadminService {
 
       final adminsCount = duenosResponse.length;
 
-      // Total de ventas globales
-      final ventasTotal = await _supabase.from('ventas').select('monto').then((
-        data,
-      ) {
-        double total = 0;
-        for (var venta in data) {
-          total += (venta['monto'] as num).toDouble();
+      // Total de ventas globales (desde ordenes)
+      double ventasTotal = 0;
+      try {
+        final ordenesData = await _supabase.from('ordenes').select('total');
+        for (var orden in ordenesData) {
+          if (orden['total'] != null) {
+            ventasTotal += (orden['total'] as num).toDouble();
+          }
         }
-        return total;
-      });
+      } catch (_) {
+        // Si la tabla no existe o hay error, usar 0
+        ventasTotal = 0;
+      }
 
       // Total de productos en todos los negocios
-      final productosResponse = await _supabase
-          .from('productos')
-          .select();
+      int productosCount = 0;
+      try {
+        final productosResponse = await _supabase.from('productos').select();
+        productosCount = productosResponse.length;
+      } catch (_) {
+        productosCount = 0;
+      }
 
-      final productosCount = productosResponse.length;
+      // Total de empleados
+      int empleadosCount = 0;
+      try {
+        final empleadosResponse = await _supabase
+            .from('perfiles')
+            .select()
+            .eq('rol', 'empleado');
+        empleadosCount = empleadosResponse.length;
+      } catch (_) {
+        empleadosCount = 0;
+      }
 
       return GlobalMetrics(
         totalNegocios: adminsCount,
         totalVentasGlobales: ventasTotal,
         totalProductos: productosCount,
+        totalEmpleados: empleadosCount,
       );
     } catch (e) {
       throw Exception('Error al obtener métricas globales: $e');
@@ -108,11 +126,13 @@ class GlobalMetrics {
   final int totalNegocios;
   final double totalVentasGlobales;
   final int totalProductos;
+  final int totalEmpleados;
 
   GlobalMetrics({
     required this.totalNegocios,
     required this.totalVentasGlobales,
     required this.totalProductos,
+    required this.totalEmpleados,
   });
 }
 

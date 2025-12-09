@@ -45,14 +45,16 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
 
       if (negocioId != null && (negocioId as String).isNotEmpty) {
         _ownerUserId = negocioId;
-        
+
         if (_ownerUserId != null && _ownerUserId!.isNotEmpty && mounted) {
           final productosService = context.read<ProductosService>();
           await productosService.loadProductosForEmployee(_ownerUserId!);
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: Empleado no vinculado a un negocio')),
+          const SnackBar(
+            content: Text('Error: Empleado no vinculado a un negocio'),
+          ),
         );
       }
     } catch (e) {
@@ -74,174 +76,171 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
             child: productosService.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : productosService.error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            productosService.error!,
-                            style: const TextStyle(color: Colors.red),
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        productosService.error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      // Header
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.8),
+                            ],
                           ),
                         ),
-                      )
-                    : ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          // Header
-                          Container(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primary,
-                                  AppColors.primary.withOpacity(0.8),
-                                ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Catálogo',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${productosService.productos.length} productos disponibles',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Catálogo',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${productosService.productos.length} productos disponibles',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Contenido
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Búsqueda
-                                TextField(
-                                  onChanged: (value) =>
-                                      productosService.setSearchQuery(value),
-                                  decoration: InputDecoration(
-                                    hintText: 'Buscar productos...',
-                                    prefixIcon: const Icon(Icons.search),
-                                    suffixIcon:
-                                        productosService.searchQuery.isNotEmpty
-                                            ? IconButton(
-                                                icon: const Icon(Icons.clear),
-                                                onPressed: () =>
-                                                    productosService.setSearchQuery(''),
-                                              )
-                                            : null,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: AppColors.border,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Categorías
-                                if (productosService.categorias.isNotEmpty)
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: productosService.categorias
-                                          .map((cat) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: _buildCategoryChip(
-                                            cat.nombre,
-                                            (productosService.selectedCategory ==
-                                                    cat.nombre ||
-                                                (cat.nombre == 'Todos' &&
-                                                    productosService
-                                                        .selectedCategory ==
-                                                        'Todos')),
-                                            () => productosService
-                                                .setSelectedCategory(cat.nombre),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                const SizedBox(height: 20),
-
-                                // Grid de productos
-                                if (productosService.productos.isEmpty)
-                                  Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 60),
-                                      child: Column(
-                                        children: [
-                                          Icon(
-                                            Icons.shopping_bag_outlined,
-                                            size: 64,
-                                            color: Colors.grey[400],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'Sin productos disponibles',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          crossAxisSpacing: 12,
-                                          mainAxisSpacing: 12,
-                                          childAspectRatio: 0.72,
-                                        ),
-                                    itemCount: productosService.productos.length,
-                                    itemBuilder: (context, index) {
-                                      final producto =
-                                          productosService.productos[index];
-                                      return _buildProductCard(
-                                        context,
-                                        producto,
-                                        context.read<CartService>(),
-                                      );
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+
+                      // Contenido
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Búsqueda
+                            TextField(
+                              onChanged: (value) =>
+                                  productosService.setSearchQuery(value),
+                              decoration: InputDecoration(
+                                hintText: 'Buscar productos...',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon:
+                                    productosService.searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () =>
+                                            productosService.setSearchQuery(''),
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.border,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Categorías
+                            if (productosService.categorias.isNotEmpty)
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: productosService.categorias.map((
+                                    cat,
+                                  ) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: _buildCategoryChip(
+                                        cat.nombre,
+                                        (productosService.selectedCategory ==
+                                                cat.nombre ||
+                                            (cat.nombre == 'Todos' &&
+                                                productosService
+                                                        .selectedCategory ==
+                                                    'Todos')),
+                                        () => productosService
+                                            .setSelectedCategory(cat.nombre),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            const SizedBox(height: 20),
+
+                            // Grid de productos
+                            if (productosService.productos.isEmpty)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 60,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.shopping_bag_outlined,
+                                        size: 64,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Sin productos disponibles',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 5,
+                                      crossAxisSpacing: 8,
+                                      mainAxisSpacing: 8,
+                                      childAspectRatio: 0.75,
+                                    ),
+                                itemCount: productosService.productos.length,
+                                itemBuilder: (context, index) {
+                                  final producto =
+                                      productosService.productos[index];
+                                  return _buildProductCard(
+                                    context,
+                                    producto,
+                                    context.read<CartService>(),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         );
       },
     );
   }
 
-  Widget _buildCategoryChip(
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
+  Widget _buildCategoryChip(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -272,180 +271,142 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
   ) {
     final hasStock = producto.stock > 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Imagen
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Imagen o placeholder
-                  producto.imagenUrl != null && producto.imagenUrl!.isNotEmpty
-                      ? Image.network(
-                          producto.imagenUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey[200],
+    return GestureDetector(
+      onTap: hasStock
+          ? () => _showProductDetail(context, producto, cartService)
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Imagen compacta
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    producto.imagenUrl != null && producto.imagenUrl!.isNotEmpty
+                        ? Image.network(
+                            producto.imagenUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[100],
+                              child: Icon(
+                                Icons.inventory_2,
+                                color: Colors.grey[300],
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: Colors.grey[100],
                             child: Icon(
-                              Icons.image_outlined,
-                              color: Colors.grey[400],
-                              size: 40,
+                              Icons.inventory_2,
+                              color: Colors.grey[300],
+                              size: 24,
                             ),
                           ),
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: Colors.grey[400],
-                            size: 40,
-                          ),
-                        ),
 
-                  // Overlay agotado
-                  if (!hasStock)
-                    Container(
-                      color: Colors.black.withOpacity(0.5),
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'AGOTADO',
+                    // Overlay agotado
+                    if (!hasStock)
+                      Container(
+                        color: Colors.black.withOpacity(0.6),
+                        child: const Center(
+                          child: Text(
+                            'SIN\nSTOCK',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 8,
+                              height: 1.1,
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                  // Badge stock
-                  if (hasStock)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${producto.stock}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          // Info del producto
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Nombre
-                Text(
-                  producto.nombre,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                  ),
-                ),
-
-                // Categoría
-                if (producto.categoria != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      producto.categoria!.nombre,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 8),
-
-                // Precio y botón
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _currencyFormat.format(producto.precio),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
+                    // Badge stock
                     if (hasStock)
-                      GestureDetector(
-                        onTap: () =>
-                            _showProductDetail(context, producto, cartService),
+                      Positioned(
+                        top: 4,
+                        right: 4,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
                           ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 16,
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${producto.stock}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // Info compacta
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Nombre
+                    Text(
+                      producto.nombre,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        height: 1.1,
+                      ),
+                    ),
+
+                    // Precio
+                    Text(
+                      _currencyFormat.format(producto.precio),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -496,7 +457,8 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                       child: Container(
                         height: 250,
                         color: AppColors.surface,
-                        child: producto.imagenUrl != null &&
+                        child:
+                            producto.imagenUrl != null &&
                                 producto.imagenUrl!.isNotEmpty
                             ? Image.network(
                                 producto.imagenUrl!,
