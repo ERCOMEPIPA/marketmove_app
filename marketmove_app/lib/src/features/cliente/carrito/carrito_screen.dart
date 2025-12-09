@@ -194,15 +194,26 @@ class CarritoScreen extends StatelessWidget {
                                 return;
                               }
 
-                              // Obtener el perfil del usuario actual para el dueño_id
-                              final profiles = await Supabase.instance.client
+                              // Obtener el negocio_id del empleado
+                              final profile = await Supabase.instance.client
                                   .from('perfiles')
-                                  .select('id')
-                                  .eq('email', currentUser.email!)
+                                  .select('negocio_id')
+                                  .eq('id', currentUser.id)
                                   .single();
 
                               final userId = currentUser.id;
-                              final ownerId = profiles['id'] as String;
+                              final negocioId = profile['negocio_id'] as String?;
+
+                              if (negocioId == null) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Error: No se encontró el negocio'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                                return;
+                              }
 
                               // Guardar la orden en Supabase
                               final ordersService = context.read<OrdersService>();
@@ -217,7 +228,7 @@ class CarritoScreen extends StatelessWidget {
                                     .toList(),
                                 cartService.total,
                                 userId,
-                                ownerId,
+                                negocioId,
                               );
 
                               // Mostrar mensaje y limpiar carrito

@@ -23,18 +23,17 @@ class ProductosService extends ChangeNotifier {
   String? get error => _error;
 
   /// Carga los productos disponibles para empleados
-  Future<void> loadProductosForEmployee(String ownerUserId) async {
+  Future<void> loadProductosForEmployee(String negocioId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // Cargar productos activos del dueño con stock > 0
+      // Cargar productos del negocio con stock > 0
       final response = await _supabase
           .from('productos')
-          .select('*, categorias(*)')
-          .eq('user_id', ownerUserId)
-          .eq('activo', true)
+          .select('*, categorias(id, nombre)')
+          .eq('negocio_id', negocioId)
           .gt('stock', 0)
           .order('nombre', ascending: true);
 
@@ -45,21 +44,26 @@ class ProductosService extends ChangeNotifier {
       // Extraer categorías únicas
       final categoriaSet = <String>{};
       for (var p in _productos) {
-        categoriaSet.add(p.categoria?.nombre ?? 'Sin categoría');
+        if (p.categoria != null) {
+          categoriaSet.add(p.categoria!.nombre);
+        }
       }
+      
       _categorias = categoriaSet
           .map((name) => CategoriaModel(
                 id: '',
-                userId: ownerUserId,
+                userId: negocioId,
                 nombre: name,
                 tipo: 'producto',
                 color: '#6366f1',
                 createdAt: DateTime.now(),
               ))
           .toList();
+      
+      // Agregar "Todos" al inicio
       _categorias.insert(0, CategoriaModel(
         id: '',
-        userId: ownerUserId,
+        userId: negocioId,
         nombre: 'Todos',
         tipo: 'producto',
         color: '#6366f1',

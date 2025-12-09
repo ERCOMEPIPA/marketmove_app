@@ -32,14 +32,14 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) return;
 
-      // Obtener el owner_id del empleado
+      // Obtener el negocio_id del empleado desde su perfil
       final profile = await Supabase.instance.client
           .from('perfiles')
-          .select('owner_id')
+          .select('negocio_id')
           .eq('id', currentUser.id)
           .single();
 
-      _ownerUserId = profile['owner_id'] as String?;
+      _ownerUserId = profile['negocio_id'] as String?;
 
       if (_ownerUserId != null && mounted) {
         final productosService = context.read<ProductosService>();

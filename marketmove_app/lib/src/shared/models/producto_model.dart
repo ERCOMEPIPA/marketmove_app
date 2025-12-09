@@ -17,13 +17,18 @@ class CategoriaModel {
   });
 
   factory CategoriaModel.fromJson(Map<String, dynamic> json) {
+    // Manejar tanto user_id como negocio_id
+    final userId = json['user_id'] ?? json['negocio_id'] ?? '';
+    
     return CategoriaModel(
       id: json['id'] as String,
-      userId: json['user_id'] as String,
+      userId: userId as String,
       nombre: json['nombre'] as String,
-      tipo: json['tipo'] as String,
+      tipo: json['tipo'] as String? ?? 'producto',
       color: json['color'] as String? ?? '#6366f1',
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
     );
   }
 
@@ -78,9 +83,12 @@ class ProductoModel {
   bool get stockBajo => stock <= stockMinimo;
 
   factory ProductoModel.fromJson(Map<String, dynamic> json) {
+    // Manejar tanto user_id como negocio_id
+    final userId = json['user_id'] ?? json['negocio_id'] ?? '';
+    
     return ProductoModel(
       id: json['id'] as String,
-      userId: json['user_id'] as String,
+      userId: userId as String,
       nombre: json['nombre'] as String,
       descripcion: json['descripcion'] as String?,
       precio: (json['precio'] as num).toDouble(),

@@ -28,7 +28,7 @@ class Order {
       fecha: DateTime.parse(json['created_at'] as String),
       estado: json['estado'] as String,
       userId: json['user_id'] as String,
-      ownerId: json['owner_id'] as String,
+      ownerId: json['dueño_id'] as String,
     );
   }
 }
@@ -102,7 +102,7 @@ class OrdersService extends ChangeNotifier {
         data = await _supabase
             .from('ordenes')
             .select('*, detalle_ordenes(*)')
-            .eq('owner_id', userId)
+            .eq('dueño_id', userId)
             .order('created_at', ascending: false);
       } else {
         data = [];
@@ -140,7 +140,7 @@ class OrdersService extends ChangeNotifier {
           .from('ordenes')
           .insert({
             'user_id': userId,
-            'owner_id': ownerId,
+            'dueño_id': ownerId,
             'total': total,
             'estado': 'Procesando',
           })
