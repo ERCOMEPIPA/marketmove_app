@@ -346,10 +346,11 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Encabezado de la orden
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: BoxDecoration(
               color: statusColor.withOpacity(0.08),
               borderRadius: const BorderRadius.only(
@@ -374,11 +375,11 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       _dateFormat.format(order.fecha),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -386,10 +387,10 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -398,14 +399,14 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                         isEntregado
                             ? Icons.check_circle
                             : Icons.schedule,
-                        size: 14,
+                        size: 12,
                         color: statusColor,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 4),
                       Text(
                         order.estado,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: statusColor,
                         ),
@@ -417,36 +418,29 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
             ),
           ),
 
-          // Items horizontales
+          // Items horizontales - con constraint de altura
           if (order.items.isNotEmpty)
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: SizedBox(
-                height: 65,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: order.items.length,
-                  itemBuilder: (context, index) {
-                    final item = order.items[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: _buildProductTile(item),
-                    );
-                  },
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 0,
+                children: order.items
+                    .map((item) => _buildProductTile(item))
+                    .toList(),
               ),
             ),
 
           // Divisor
           Container(
-            height: 1,
+            height: 0.5,
             margin: const EdgeInsets.symmetric(horizontal: 16),
             color: Colors.grey[200],
           ),
 
           // Footer con total y detalles
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -454,19 +448,19 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total de la orden',
+                      'Total',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       _currencyFormat.format(order.total),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 15,
                         color: AppColors.primary,
                       ),
                     ),
@@ -474,10 +468,10 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.info.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: AppColors.info.withOpacity(0.2),
                     ),
@@ -485,7 +479,7 @@ class _MisComprasScreenState extends State<MisComprasScreen> {
                   child: Text(
                     '${order.items.length} ${order.items.length == 1 ? "artículo" : "artículos"}',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       color: AppColors.info,
                       fontWeight: FontWeight.w600,
                     ),

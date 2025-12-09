@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
+import '../services/notification_service.dart';
+import 'notification_widgets.dart';
 
 /// Shell/Layout para las vistas de empleado
 /// Incluye un BottomNavigationBar para navegación entre secciones
@@ -50,6 +52,23 @@ class _ClienteShellState extends State<ClienteShell> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
+          // Botón de búsqueda
+          IconButton(
+            onPressed: () => context.push('/empleado/search'),
+            icon: const Icon(Icons.search),
+          ),
+          // Botón de notificaciones
+          Consumer<NotificationService>(
+            builder: (context, notificationService, child) {
+              return NotificationBadge(
+                count: notificationService.unreadCount,
+                child: IconButton(
+                  onPressed: () => context.push('/notifications'),
+                  icon: const Icon(Icons.notifications),
+                ),
+              );
+            },
+          ),
           // Botón del carrito
           Consumer<CartService>(
             builder: (context, cartService, child) {

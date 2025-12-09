@@ -29,12 +29,11 @@ class ProductosService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Cargar productos del negocio con stock > 0
+      // Cargar productos del negocio
       final response = await _supabase
           .from('productos')
           .select('*, categorias(id, nombre)')
-          .eq('negocio_id', negocioId)
-          .gt('stock', 0)
+          .eq('user_id', negocioId)
           .order('nombre', ascending: true);
 
       _productos = (response as List)

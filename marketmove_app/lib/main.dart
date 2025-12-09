@@ -13,6 +13,8 @@ import 'src/features/cliente/catalogo/catalogo_screen.dart';
 import 'src/features/cliente/compras/mis_compras_screen.dart';
 import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
 import 'src/features/cliente/carrito/carrito_screen.dart';
+import 'src/features/cliente/search/search_screen.dart';
+import 'src/features/notificaciones/notificaciones_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
 import 'src/shared/widgets/superadmin_shell.dart';
@@ -22,6 +24,9 @@ import 'src/shared/services/auth_service.dart';
 import 'src/shared/services/cart_service.dart';
 import 'src/shared/services/orders_service.dart';
 import 'src/shared/services/productos_service.dart';
+import 'src/shared/services/notification_service.dart';
+import 'src/shared/services/search_service.dart';
+import 'src/shared/services/reports_service.dart';
 
 // Instancia global del servicio de autenticación
 final _authService = AuthService();
@@ -44,17 +49,36 @@ class MarketMoveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final notificationService = NotificationService();
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => CartService()),
-        ChangeNotifierProvider(create: (context) => OrdersService()),
+        ChangeNotifierProvider(create: (context) => notificationService),
+        ChangeNotifierProvider(
+          create: (context) => OrdersService(notificationService),
+        ),
         ChangeNotifierProvider(create: (context) => ProductosService()),
+        ChangeNotifierProvider(
+          create: (context) => SearchService(
+            context.read<ProductosService>(),
+          ),
+        ),
+        ChangeNotifierProvider(create: (context) => ReportsService()),
       ],
       child: MaterialApp.router(
         title: 'MarketMove',
         debugShowCheckedModeBanner: false,
         theme: ThemeConfig.lightTheme,
         routerConfig: _router,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              child ?? const SizedBox.shrink(),
+              const NotificationOverlay(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -166,7 +190,19 @@ final GoRouter _router = GoRouter(
           name: 'empleado_carrito',
           builder: (context, state) => const CarritoScreen(),
         ),
+        GoRoute(
+          path: '/empleado/search',
+          name: 'empleado_search',
+          builder: (context, state) => const SearchScreen(),
+        ),
       ],
+    ),
+
+    // Ruta de notificaciones (accesible desde cualquier lugar)
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) => const NotificationsScreen(),
     ),
 
     // Mantener rutas legacy para compatibilidad (redirigir a admin)

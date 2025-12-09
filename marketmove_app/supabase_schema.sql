@@ -238,37 +238,38 @@ CREATE POLICY "Admins can delete own categories"
 -- Políticas RLS para: productos
 -- ============================================================
 
--- Los admins pueden ver sus productos, los clientes pueden ver productos activos de cualquier admin
+-- Los admins/dueños pueden ver todos sus productos
+-- Los empleados y clientes pueden ver productos activos de cualquier usuario
 CREATE POLICY "Users can view products"
     ON public.productos FOR SELECT
     USING (
         auth.uid() = user_id OR 
-        (activo = true AND stock > 0 AND 
-         EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol = 'cliente'))
+        (activo = true AND 
+         EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol IN ('cliente', 'empleado')))
     );
 
--- Solo los admins pueden crear productos
-CREATE POLICY "Admins can insert products"
+-- Solo los dueños/admins pueden crear productos
+CREATE POLICY "Dueños can insert products"
     ON public.productos FOR INSERT
     WITH CHECK (
         auth.uid() = user_id AND 
-        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol = 'admin')
+        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol IN ('dueno', 'admin'))
     );
 
--- Solo los admins pueden actualizar sus propios productos
-CREATE POLICY "Admins can update own products"
+-- Solo los dueños/admins pueden actualizar sus propios productos
+CREATE POLICY "Dueños can update own products"
     ON public.productos FOR UPDATE
     USING (
         auth.uid() = user_id AND 
-        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol = 'admin')
+        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol IN ('dueno', 'admin'))
     );
 
--- Solo los admins pueden eliminar sus propios productos
-CREATE POLICY "Admins can delete own products"
+-- Solo los dueños/admins pueden eliminar sus propios productos
+CREATE POLICY "Dueños can delete own products"
     ON public.productos FOR DELETE
     USING (
         auth.uid() = user_id AND 
-        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol = 'admin')
+        EXISTS (SELECT 1 FROM public.perfiles WHERE id = auth.uid() AND rol IN ('dueno', 'admin'))
     );
 
 -- ============================================================

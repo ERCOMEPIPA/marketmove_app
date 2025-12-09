@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import 'notification_widgets.dart';
 
 /// Shell/Layout para las vistas de administrador
 /// Incluye un Drawer con navegación a todas las secciones admin
@@ -15,9 +18,24 @@ class AdminShell extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin - MarketMove'),
+        title: const Text('Dueño - MarketMove'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          // Botón de notificaciones
+          Consumer<NotificationService>(
+            builder: (context, notificationService, child) {
+              return NotificationBadge(
+                count: notificationService.unreadCount,
+                child: IconButton(
+                  onPressed: () => context.push('/notifications'),
+                  icon: const Icon(Icons.notifications),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -32,13 +50,13 @@ class AdminShell extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Icon(
-                    Icons.admin_panel_settings,
+                    Icons.store,
                     size: 48,
                     color: Colors.white,
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Panel Administrador',
+                    'Panel del Dueño',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,

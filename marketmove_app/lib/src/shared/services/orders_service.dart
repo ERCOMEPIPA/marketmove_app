@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'notification_service.dart';
 
 class Order {
   final String id;
@@ -65,8 +66,11 @@ class OrderItem {
 
 class OrdersService extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
+  final NotificationService _notificationService;
   final List<Order> _orders = [];
   bool _isLoading = false;
+
+  OrdersService(this._notificationService);
 
   List<Order> get orders => _orders;
   bool get isLoading => _isLoading;
@@ -135,12 +139,12 @@ class OrdersService extends ChangeNotifier {
     String ownerId,
   ) async {
     try {
-      // Insertar la orden
+      // Insertar la orden con ambas columnas de owner (dueño_id y owner_id)
       final orderResponse = await _supabase
           .from('ordenes')
           .insert({
             'user_id': userId,
-            'dueño_id': ownerId,
+            'owner_id': ownerId,
             'total': total,
             'estado': 'Procesando',
           })
@@ -160,10 +164,30 @@ class OrdersService extends ChangeNotifier {
         });
       }
 
+      // Enviar notificación al empleado
+      _notificationService.addNotification(
+        titulo: 'Pedido creado',
+        mensaje: 'Tu pedido por \$${total.toStringAsFixed(2)} ha sido enviado',
+        tipo: NotificationType.pedidoRecibido,
+      );
+
+      // Enviar notificación al dueño
+      _notificationService.addNotification(
+        titulo: 'Nuevo pedido recibido',
+        mensaje: 'Tienes un nuevo pedido por \$${total.toStringAsFixed(2)}',
+        tipo: NotificationType.pedidoRecibido,
+      );
+
       // Recargar las órdenes
       await loadOrders(userId, 'empleado');
     } catch (e) {
       print('Error adding order: $e');
+      // Enviar notificación de error
+      _notificationService.addNotification(
+        titulo: 'Error al crear pedido',
+        mensaje: 'No se pudo procesar tu pedido. Intenta de nuevo.',
+        tipo: NotificationType.error,
+      );
       rethrow;
     }
   }
@@ -176,9 +200,47 @@ class OrdersService extends ChangeNotifier {
           .update({'estado': newStatus})
           .eq('id', orderId);
 
+      // Enviar notificación según el nuevo estado
+      String titulo = '';
+      String mensaje = '';
+      NotificationType tipo = NotificationType.info;
+
+      switch (newStatus) {
+        case 'Aceptada':
+          titulo = 'Pedido aceptado';
+          mensaje = 'Tu pedido ha sido aceptado y está en preparación';
+          tipo = NotificationType.pedidoEnProceso;
+          break;
+        case 'Entregada':
+          titulo = 'Pedido entregado';
+          mensaje = 'Tu pedido ha sido entregado exitosamente';
+          tipo = NotificationType.pedidoEntregado;
+          break;
+        case 'Cancelada':
+          titulo = 'Pedido cancelado';
+          mensaje = 'Tu pedido ha sido cancelado';
+          tipo = NotificationType.error;
+          break;
+        default:
+          titulo = 'Actualización de pedido';
+          mensaje = 'Tu pedido ha sido actualizado a: $newStatus';
+          tipo = NotificationType.info;
+      }
+
+      _notificationService.addNotification(
+        titulo: titulo,
+        mensaje: mensaje,
+        tipo: tipo,
+      );
+
       notifyListeners();
     } catch (e) {
       print('Error updating order status: $e');
+      _notificationService.addNotification(
+        titulo: 'Error',
+        mensaje: 'No se pudo actualizar el estado del pedido',
+        tipo: NotificationType.error,
+      );
       rethrow;
     }
   }

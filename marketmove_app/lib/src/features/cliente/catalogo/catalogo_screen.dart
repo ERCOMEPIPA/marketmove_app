@@ -32,23 +32,33 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) return;
 
-      // Obtener el negocio_id del empleado desde su perfil
-      final profile = await Supabase.instance.client
+      // Obtener el perfil del empleado
+      final profileList = await Supabase.instance.client
           .from('perfiles')
-          .select('negocio_id')
-          .eq('id', currentUser.id)
-          .single();
+          .select('rol, email, negocio_id')
+          .eq('id', currentUser.id);
 
-      _ownerUserId = profile['negocio_id'] as String?;
+      if (profileList.isEmpty) return;
 
-      if (_ownerUserId != null && mounted) {
-        final productosService = context.read<ProductosService>();
-        await productosService.loadProductosForEmployee(_ownerUserId!);
+      final profile = profileList[0];
+      final negocioId = profile['negocio_id'];
+
+      if (negocioId != null && (negocioId as String).isNotEmpty) {
+        _ownerUserId = negocioId;
+        
+        if (_ownerUserId != null && _ownerUserId!.isNotEmpty && mounted) {
+          final productosService = context.read<ProductosService>();
+          await productosService.loadProductosForEmployee(_ownerUserId!);
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Empleado no vinculado a un negocio')),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Error al cargar productos: $e')),
         );
       }
     }
