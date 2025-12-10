@@ -59,7 +59,12 @@ class _PlanesScreenState extends State<PlanesScreen> {
     final maxClientesController = TextEditingController(
       text: plan?.maxClientes.toString() ?? '100',
     );
+    final stripePriceIdController = TextEditingController(
+      text: plan?.stripePriceId ?? '',
+    );
     bool activo = plan?.activo ?? true;
+    TipoFacturacion tipoFacturacion =
+        plan?.tipoFacturacion ?? TipoFacturacion.mensual;
     bool isLoading = false;
 
     showDialog(
@@ -98,6 +103,27 @@ class _PlanesScreenState extends State<PlanesScreen> {
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
+                // Selector de tipo de facturación
+                DropdownButtonFormField<TipoFacturacion>(
+                  value: tipoFacturacion,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de Facturación',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.repeat),
+                  ),
+                  items: TipoFacturacion.values.map((tipo) {
+                    return DropdownMenuItem(
+                      value: tipo,
+                      child: Text(tipo.nombre),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => tipoFacturacion = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
@@ -124,6 +150,22 @@ class _PlanesScreenState extends State<PlanesScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                // Campo para Stripe Price ID
+                TextField(
+                  controller: stripePriceIdController,
+                  decoration: InputDecoration(
+                    labelText: 'Stripe Price ID',
+                    hintText: 'price_xxxxx...',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.payment),
+                    helperText: 'ID del precio en Stripe Dashboard',
+                    helperStyle: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 SwitchListTile(
                   title: const Text('Activo'),
                   value: activo,
@@ -146,6 +188,11 @@ class _PlanesScreenState extends State<PlanesScreen> {
                       setDialogState(() => isLoading = true);
 
                       try {
+                        final stripePriceId =
+                            stripePriceIdController.text.trim().isEmpty
+                            ? null
+                            : stripePriceIdController.text.trim();
+
                         if (plan == null) {
                           final nuevoPlan = PlanModel(
                             id: '',
@@ -161,6 +208,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                                 int.tryParse(maxClientesController.text) ?? 100,
                             activo: activo,
                             createdAt: DateTime.now(),
+                            stripePriceId: stripePriceId,
+                            tipoFacturacion: tipoFacturacion,
                           );
                           await _planesService.crearPlan(nuevoPlan);
                         } else {
@@ -177,6 +226,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                             'max_clientes':
                                 int.tryParse(maxClientesController.text) ?? 100,
                             'activo': activo,
+                            'stripe_price_id': stripePriceId,
+                            'tipo_facturacion': tipoFacturacion.name,
                           });
                         }
 
@@ -342,7 +393,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
                       ),
                     ),
                     Text(
-                      '/mes',
+                      plan.precioLabel,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,

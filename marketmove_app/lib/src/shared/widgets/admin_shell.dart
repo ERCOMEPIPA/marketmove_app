@@ -135,6 +135,24 @@ class AdminShell extends StatelessWidget {
               route: '/admin/reportes',
             ),
             const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'CUENTA',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            _buildDrawerItem(
+              context: context,
+              icon: Icons.card_membership,
+              title: 'Mi Plan',
+              route: '/admin/planes',
+            ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Cerrar Sesión'),

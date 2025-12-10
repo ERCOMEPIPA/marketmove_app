@@ -14,21 +14,12 @@ import 'src/features/admin/pipeline/pipeline_screen.dart';
 import 'src/features/admin/empleados/empleados_screen.dart';
 import 'src/features/superadmin/superadmin_dashboard_v2.dart';
 import 'src/features/superadmin/planes_screen.dart';
-import 'src/features/cliente/catalogo/catalogo_screen.dart';
-import 'src/features/cliente/compras/mis_compras_screen.dart';
-import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
-import 'src/features/cliente/carrito/carrito_screen.dart';
-import 'src/features/cliente/search/search_screen.dart';
-import 'src/features/cliente/dashboard/cliente_dashboard_screen.dart';
-import 'src/features/empleado/dashboard/empleado_dashboard_crm.dart';
-import 'src/features/empleado/clientes/mis_clientes_screen.dart';
-import 'src/features/empleado/deals/mis_deals_screen.dart';
+import 'src/features/admin/planes/seleccion_plan_screen.dart';
 import 'src/features/notificaciones/notificaciones_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
 import 'src/shared/widgets/superadmin_shell.dart';
 import 'src/shared/widgets/admin_shell.dart';
-import 'src/shared/widgets/cliente_shell.dart';
 import 'src/shared/services/auth_service.dart';
 import 'src/shared/services/cart_service.dart';
 import 'src/shared/services/orders_service.dart';
@@ -92,6 +83,7 @@ class MarketMoveApp extends StatelessWidget {
 }
 
 // Configuración de rutas con GoRouter y control de acceso por roles
+// Solo existen 2 roles: Superadmin y Dueño
 final GoRouter _router = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) async {
@@ -108,13 +100,11 @@ final GoRouter _router = GoRouter(
     if (isAuthenticated && isLoggingIn) {
       final userRole = await _authService.getCurrentUserRole();
       if (userRole != null) {
-        // Redirigir según el rol específico
+        // Redirigir según el rol: Superadmin o Dueño
         if (userRole.isSuperadmin) {
           return '/superadmin/dashboard';
-        } else if (userRole.isDueno) {
+        } else {
           return '/admin/dashboard';
-        } else if (userRole.isEmpleado) {
-          return '/empleado/dashboard';
         }
       }
     }
@@ -129,7 +119,7 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const LoginScreen(),
     ),
 
-    // Ruta de registro
+    // Ruta de registro (solo para dueños)
     GoRoute(
       path: '/register',
       name: 'register',
@@ -209,53 +199,10 @@ final GoRouter _router = GoRouter(
           name: 'admin_empleados',
           builder: (context, state) => const EmpleadosScreen(),
         ),
-      ],
-    ),
-
-    // Rutas de Empleado (Cliente/Trabajador)
-    ShellRoute(
-      builder: (context, state, child) =>
-          ClienteShell(location: state.uri.path, child: child),
-      routes: [
         GoRoute(
-          path: '/empleado/dashboard',
-          name: 'empleado_dashboard',
-          builder: (context, state) => const EmpleadoDashboardCRM(),
-        ),
-        GoRoute(
-          path: '/empleado/clientes',
-          name: 'empleado_clientes',
-          builder: (context, state) => const MisClientesScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/deals',
-          name: 'empleado_deals',
-          builder: (context, state) => const MisDealsScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/catalogo',
-          name: 'empleado_catalogo',
-          builder: (context, state) => const CatalogoScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/compras',
-          name: 'empleado_compras',
-          builder: (context, state) => const MisComprasScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/perfil',
-          name: 'empleado_perfil',
-          builder: (context, state) => const PerfilClienteScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/carrito',
-          name: 'empleado_carrito',
-          builder: (context, state) => const CarritoScreen(),
-        ),
-        GoRoute(
-          path: '/empleado/search',
-          name: 'empleado_search',
-          builder: (context, state) => const SearchScreen(),
+          path: '/admin/planes',
+          name: 'admin_planes',
+          builder: (context, state) => const SeleccionPlanScreen(),
         ),
       ],
     ),
@@ -267,7 +214,7 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const NotificationsScreen(),
     ),
 
-    // Mantener rutas legacy para compatibilidad (redirigir a admin)
+    // Rutas legacy para compatibilidad (redirigir a admin)
     GoRoute(
       path: '/dashboard',
       redirect: (context, state) => '/admin/dashboard',
@@ -277,19 +224,6 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/productos',
       redirect: (context, state) => '/admin/productos',
-    ),
-    // Rutas legacy de cliente
-    GoRoute(
-      path: '/cliente/catalogo',
-      redirect: (context, state) => '/empleado/catalogo',
-    ),
-    GoRoute(
-      path: '/cliente/compras',
-      redirect: (context, state) => '/empleado/compras',
-    ),
-    GoRoute(
-      path: '/cliente/perfil',
-      redirect: (context, state) => '/empleado/perfil',
     ),
   ],
 );

@@ -1,6 +1,49 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_profile_model.dart';
 
+/// Tipos de facturación para planes
+enum TipoFacturacion {
+  mensual, // Pago cada mes
+  trimestral, // Pago cada 3 meses
+  unico, // Pago único (lifetime)
+}
+
+/// Exensión para TipoFacturacion
+extension TipoFacturacionExtension on TipoFacturacion {
+  String get label {
+    switch (this) {
+      case TipoFacturacion.mensual:
+        return '/mes';
+      case TipoFacturacion.trimestral:
+        return '/trimestre';
+      case TipoFacturacion.unico:
+        return ' (pago único)';
+    }
+  }
+
+  String get nombre {
+    switch (this) {
+      case TipoFacturacion.mensual:
+        return 'Mensual';
+      case TipoFacturacion.trimestral:
+        return 'Trimestral';
+      case TipoFacturacion.unico:
+        return 'Pago único';
+    }
+  }
+
+  static TipoFacturacion fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'trimestral':
+        return TipoFacturacion.trimestral;
+      case 'unico':
+        return TipoFacturacion.unico;
+      default:
+        return TipoFacturacion.mensual;
+    }
+  }
+}
+
 /// Modelo de Plan de Suscripción
 class PlanModel {
   final String id;
@@ -11,6 +54,8 @@ class PlanModel {
   final int maxClientes;
   final bool activo;
   final DateTime createdAt;
+  final String? stripePriceId; // ID del precio en Stripe
+  final TipoFacturacion tipoFacturacion; // Tipo de facturación
 
   PlanModel({
     required this.id,
@@ -21,7 +66,15 @@ class PlanModel {
     required this.maxClientes,
     required this.activo,
     required this.createdAt,
+    this.stripePriceId,
+    this.tipoFacturacion = TipoFacturacion.mensual,
   });
+
+  /// Texto para mostrar el precio con su período
+  String get precioLabel => tipoFacturacion.label;
+
+  /// Si es pago único (no recurrente)
+  bool get esPagoUnico => tipoFacturacion == TipoFacturacion.unico;
 
   factory PlanModel.fromJson(Map<String, dynamic> json) {
     return PlanModel(
@@ -33,6 +86,10 @@ class PlanModel {
       maxClientes: json['max_clientes'] ?? 100,
       activo: json['activo'] ?? true,
       createdAt: DateTime.parse(json['created_at']),
+      stripePriceId: json['stripe_price_id'],
+      tipoFacturacion: TipoFacturacionExtension.fromString(
+        json['tipo_facturacion'],
+      ),
     );
   }
 
@@ -44,6 +101,8 @@ class PlanModel {
       'max_empleados': maxEmpleados,
       'max_clientes': maxClientes,
       'activo': activo,
+      'stripe_price_id': stripePriceId,
+      'tipo_facturacion': tipoFacturacion.name,
     };
   }
 }

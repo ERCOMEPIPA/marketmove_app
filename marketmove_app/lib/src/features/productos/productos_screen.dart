@@ -611,8 +611,9 @@ class _ProductoFormDialogState extends State<_ProductoFormDialog> {
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   validator: (value) {
                     if (value?.isEmpty ?? true) return 'Requerido';
-                    if (double.tryParse(value!) == null)
+                    if (double.tryParse(value!) == null) {
                       return 'Número inválido';
+                    }
                     return null;
                   },
                 ),

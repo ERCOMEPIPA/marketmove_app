@@ -2,10 +2,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_profile_model.dart';
 
 /// Servicio para validar y asegurar la integridad de datos de usuarios
+/// Solo existen 2 tipos de usuario: Superadmin y Dueño
 class UserValidationService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Valida que el rol de un usuario sea válido
+  /// Solo se aceptan: superadmin o dueno
   Future<bool> validateUserRole(String userId) async {
     try {
       final response = await _supabase
@@ -15,7 +17,7 @@ class UserValidationService {
           .single();
 
       final rol = response['rol'] as String;
-      return ['superadmin', 'dueno', 'empleado'].contains(rol.toLowerCase());
+      return ['superadmin', 'dueno'].contains(rol.toLowerCase());
     } catch (e) {
       return false;
     }
@@ -24,7 +26,6 @@ class UserValidationService {
   /// Asegura que un usuario tenga acceso a un recurso
   /// Un SUPERADMIN puede acceder a todo
   /// Un DUEÑO solo puede acceder a su propio negocio
-  /// Un EMPLEADO solo puede acceder a catálogo y compras
   Future<bool> canAccessResource({
     required String userId,
     required String resourceType, // 'negocio', 'catalogo', 'perfil'
@@ -39,8 +40,8 @@ class UserValidationService {
           // Solo SUPERADMIN y DUEÑO del negocio
           return profile.isSuperadmin || profile.id == resourceId;
         case 'catalogo':
-          // EMPLEADO y DUEÑO
-          return !profile.isSuperadmin;
+          // Solo DUEÑO
+          return profile.isDueno;
         case 'perfil':
           // Todos pueden ver su perfil
           return profile.id == userId;
@@ -68,10 +69,7 @@ class UserValidationService {
   }
 
   /// Valida que un DUEÑO sea el propietario de un negocio
-  Future<bool> isDuenoOfNegocio(
-    String userId,
-    String negocioId,
-  ) async {
+  Future<bool> isDuenoOfNegocio(String userId, String negocioId) async {
     try {
       final response = await _supabase
           .from('perfiles')
@@ -86,11 +84,8 @@ class UserValidationService {
     }
   }
 
-  /// Valida que un EMPLEADO pertenezca a un negocio
-  Future<bool> isEmpleadoOfNegocio(
-    String userId,
-    String negocioId,
-  ) async {
+  /// Valida que un usuario pertenezca a un negocio
+  Future<bool> isUserOfNegocio(String userId, String negocioId) async {
     try {
       final response = await _supabase
           .from('perfiles')

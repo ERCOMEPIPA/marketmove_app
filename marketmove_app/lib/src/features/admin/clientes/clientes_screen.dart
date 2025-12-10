@@ -273,7 +273,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: etapa,
+                  initialValue: etapa,
                   decoration: const InputDecoration(
                     labelText: 'Etapa inicial',
                     border: OutlineInputBorder(),
@@ -1123,7 +1123,7 @@ class _ClienteFormDialogState extends State<_ClienteFormDialog> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _estado,
+                        initialValue: _estado,
                         decoration: const InputDecoration(
                           labelText: 'Estado',
                           border: OutlineInputBorder(),
@@ -1155,7 +1155,7 @@ class _ClienteFormDialogState extends State<_ClienteFormDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _fuente,
+                  initialValue: _fuente,
                   decoration: const InputDecoration(
                     labelText: 'Fuente',
                     border: OutlineInputBorder(),

@@ -1,92 +1,84 @@
-# 📋 Tareas Pendientes CRM - Continuar Mañana
+# 📋 Tareas Pendientes CRM - Funcionalidades Opcionales
 
-*Última actualización: 10 Diciembre 2024*
-
----
-
-## 🔴 Prioridad Alta
-
-### 1. Validación de Empleados
-- [x] Agregar validación de límites al crear empleados (similar a clientes)
-- [x] Mostrar barra de uso de empleados en la pantalla correspondiente
-
-### 2. Integrar Rutas de Empleado
-- [x] Agregar rutas `/empleado/dashboard` y `/empleado/clientes` en `main.dart`
-- [x] Actualizar `cliente_shell.dart` para empleados CRM
-
-### 3. Asignar Plan por Defecto
-- [x] Cuando se registra un nuevo dueño, asignarle automáticamente el plan "Básico"
+*Última actualización: 11 Diciembre 2024*
 
 ---
 
-## 🟡 Prioridad Media
+## ✅ Completado
 
-### 4. Pantalla de Deals para Empleado
-- [x] Crear `MisDealsScreen` - similar a `MisClientesScreen`
-- [x] Solo mostrar deals asignados al empleado
+### Integración de Stripe y Pagos
+- [x] Configurar productos en Stripe Dashboard
+- [x] Crear Edge Functions (create-checkout, create-portal, stripe-webhook)
+- [x] Integrar checkout de suscripciones
+- [x] Añadir tipos de facturación (mensual, trimestral, pago único)
+- [x] Pantalla "Mi Plan" para dueños
+- [x] Webhook procesando pagos correctamente
 
-### 5. Crear Deal desde Cliente
-- [x] En `ClientesScreen`, el botón "Crear Deal" debe abrir el formulario con el cliente pre-seleccionado
+### Roles y Autenticación
+- [x] Simplificar roles a Superadmin y Dueño
+- [x] Templates de email profesionales para Supabase
 
-### 6. Dashboard del Dueño Mejorado
-- [x] Agregar widget `PlanUsageWidget` al dashboard principal
-- [ ] Mostrar resumen de clientes y deals
-
-### 7. Historial de Actividades
-- [ ] Mostrar actividades recientes en detalle de cliente
-- [ ] Permitir registrar notas/llamadas desde detalle
+### Validaciones de Plan
+- [x] Validación de límites de clientes
+- [x] Validación de límites de empleados
+- [x] Widget de uso de plan
 
 ---
 
-## 🟢 Mejoras Opcionales
+## 🟢 Mejoras Opcionales (Nice to Have)
 
-### 8. Notificaciones de Límites
-- [ ] Enviar notificación cuando se alcanza el 80% del límite
-- [ ] Recordatorio al dueño de actualizar plan
-
-### 9. Exportar Datos
-- [ ] Exportar lista de clientes a CSV
+### 📊 Exportación de Datos
+- [ ] Exportar lista de clientes a CSV/Excel
 - [ ] Exportar pipeline a PDF
+- [ ] Exportar facturas/historial de pagos
+- [ ] Generar reportes mensuales automáticos
 
-### 10. Filtros Avanzados en Pipeline
-- [ ] Filtrar por empleado asignado
+### 🔔 Notificaciones
+- [ ] Notificación cuando se alcanza el 80% del límite
+- [ ] Recordatorio de renovación de suscripción
+- [ ] Alertas de deals próximos a vencer
+- [ ] Notificación por email de nuevos clientes
+
+### 🔍 Filtros Avanzados
+- [ ] Filtrar pipeline por empleado asignado
 - [ ] Filtrar por rango de fechas
-- [ ] Buscar por nombre de cliente
+- [ ] Búsqueda avanzada de clientes
+- [ ] Filtros guardados personalizados
 
-### 11. Métricas de Empleados
+### 📈 Métricas y Analytics
 - [ ] Ranking de empleados por deals cerrados
 - [ ] Gráfico de actividad por empleado
+- [ ] Dashboard con KPIs avanzados
+- [ ] Comparativa mensual de ventas
+
+### 🎨 Mejoras de UX
+- [ ] Modo oscuro
+- [ ] Personalización de colores por negocio
+- [ ] Onboarding guiado para nuevos usuarios
+- [ ] Tour interactivo de funcionalidades
+
+### 📱 Funcionalidades Adicionales
+- [ ] App móvil nativa (actualmente solo web)
+- [ ] Integración con WhatsApp Business
+- [ ] Calendario de reuniones integrado
+- [ ] Firma electrónica de contratos
 
 ---
 
-## 📁 Archivos Clave Creados/Modificados
+## 📁 Documentación Importante
 
 | Archivo | Descripción |
 |---------|-------------|
-| `services/clientes_service.dart` | CRUD clientes/leads |
-| `services/deals_service.dart` | Pipeline y oportunidades |
-| `services/actividades_service.dart` | Llamadas, emails, reuniones |
-| `services/planes_service.dart` | Gestión de planes + `getPlanBasico()` |
-| `services/limites_service.dart` | Validación de límites |
-| `admin/clientes/clientes_screen.dart` | Gestión clientes + crear deal desde cliente |
-| `admin/pipeline/pipeline_screen.dart` | Pipeline Kanban |
-| `admin/empleados/empleados_screen.dart` | **NUEVO** - Gestión de empleados |
-| `empleado/dashboard/empleado_dashboard_crm.dart` | Dashboard empleado |
-| `empleado/clientes/mis_clientes_screen.dart` | Clientes asignados |
-| `empleado/deals/mis_deals_screen.dart` | **NUEVO** - Deals asignados |
-| `superadmin/superadmin_dashboard_v2.dart` | Dashboard global |
-| `superadmin/planes_screen.dart` | Gestión planes |
-| `widgets/plan_usage_widget.dart` | Widget de uso de plan |
-| `widgets/cliente_shell.dart` | 6 tabs para empleados (Dashboard, Clientes, Deals, Catálogo, Compras, Perfil) |
+| `docs/stripe_setup.md` | Guía completa de configuración de Stripe |
+| `docs/supabase_email_templates.md` | Templates de email para Supabase |
+| `CUENTAS_PRUEBA.md` | Credenciales de cuentas de prueba |
 
 ---
 
-## 🚀 Estado Actual
+## 🚀 Estado del Proyecto
 
-✅ **Todas las tareas de Prioridad Alta completadas**
-✅ **La mayoría de tareas de Prioridad Media completadas**
+✅ **CRM completamente funcional**
+✅ **Sistema de suscripciones con Stripe integrado**
+✅ **Todas las funcionalidades core implementadas**
 
-### Próximos pasos sugeridos:
-1. Mostrar resumen de clientes/deals en el dashboard
-2. Historial de actividades en detalle de cliente
-3. Mejoras opcionales (notificaciones, exportación, filtros)
+El CRM está listo para producción. Las tareas listadas arriba son mejoras opcionales para futuras versiones.

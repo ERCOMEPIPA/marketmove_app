@@ -185,16 +185,6 @@ class AuthService {
     }
   }
 
-  /// Verifica si el usuario actual tiene rol de empleado
-  Future<bool> isUserEmpleado() async {
-    try {
-      final profile = await getCurrentUserProfile();
-      return profile?.isEmpleado ?? false;
-    } catch (e) {
-      return false;
-    }
-  }
-
   /// Obtiene el rol del usuario actual
   Future<UserRole?> getCurrentUserRole() async {
     try {

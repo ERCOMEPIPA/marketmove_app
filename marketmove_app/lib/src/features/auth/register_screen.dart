@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/models/user_role.dart';
 
-/// Pantalla de registro de nuevos usuarios
+/// Pantalla de registro de nuevos usuarios (solo Dueños)
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -22,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  UserRole _selectedRole = UserRole.dueno;
 
   @override
   void dispose() {
@@ -41,10 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final profile = await _authService.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          nombreNegocio: _selectedRole == UserRole.dueno
-              ? _nombreNegocioController.text.trim()
-              : null,
-          rol: _selectedRole,
+          nombreNegocio: _nombreNegocioController.text.trim(),
+          rol: UserRole.dueno, // Solo se registran dueños
         );
 
         if (!mounted) return;
@@ -59,12 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
 
-        // Redirigir según el rol
-        if (profile.isDueno) {
-          context.go('/admin/dashboard');
-        } else {
-          context.go('/empleado/catalogo');
-        }
+        // Redirigir al dashboard de admin (dueño)
+        context.go('/admin/dashboard');
       } catch (e) {
         if (!mounted) return;
 
@@ -98,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header
-                  Icon(Icons.person_add, size: 64, color: colorScheme.primary),
+                  Icon(Icons.store, size: 64, color: colorScheme.primary),
                   const SizedBox(height: 16),
                   Text(
                     'Crear Cuenta',
@@ -110,48 +103,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Únete a MarketMove',
+                    'Registra tu negocio en MarketMove',
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 32),
-
-                  // Selector de Rol
-                  Text(
-                    'Tipo de cuenta',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _RoleCard(
-                          icon: Icons.store,
-                          title: 'Dueño',
-                          subtitle: 'Gestiona tu negocio',
-                          isSelected: _selectedRole == UserRole.dueno,
-                          onTap: () =>
-                              setState(() => _selectedRole = UserRole.dueno),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _RoleCard(
-                          icon: Icons.badge,
-                          title: 'Empleado',
-                          subtitle: 'Trabaja en un negocio',
-                          isSelected: _selectedRole == UserRole.empleado,
-                          onTap: () =>
-                              setState(() => _selectedRole = UserRole.empleado),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
 
                   // Campo de Email
                   TextFormField(
@@ -175,26 +133,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Nombre del Negocio (solo para dueños)
-                  if (_selectedRole == UserRole.dueno) ...[
-                    TextFormField(
-                      controller: _nombreNegocioController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre del Negocio',
-                        hintText: 'Mi Tienda',
-                        prefixIcon: Icon(Icons.storefront),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (_selectedRole == UserRole.dueno &&
-                            (value == null || value.isEmpty)) {
-                          return 'Por favor ingrese el nombre de su negocio';
-                        }
-                        return null;
-                      },
+                  // Nombre del Negocio (siempre requerido)
+                  TextFormField(
+                    controller: _nombreNegocioController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre del Negocio',
+                      hintText: 'Mi Tienda',
+                      prefixIcon: Icon(Icons.storefront),
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16),
-                  ],
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingrese el nombre de su negocio';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
                   // Campo de Contraseña
                   TextFormField(
@@ -292,72 +247,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Widget de tarjeta para selección de rol
-class _RoleCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RoleCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primaryContainer : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? colorScheme.primary : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isSelected ? colorScheme.primary : Colors.grey[600],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isSelected ? colorScheme.primary : Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : Colors.grey[600],
-              ),
-            ),
-          ],
         ),
       ),
     );

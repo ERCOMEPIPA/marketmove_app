@@ -146,6 +146,22 @@ class LimitesService {
           'Puedes agregar clientes (${limites.clientesActuales}/${limites.maxClientes})',
     );
   }
+
+  /// Obtener límites del usuario actual (autenticado)
+  Future<PlanLimites> getLimitesActual() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      return PlanLimites(
+        planNombre: 'Sin Plan',
+        maxEmpleados: 0,
+        maxClientes: 0,
+        empleadosActuales: 0,
+        clientesActuales: 0,
+        suscripcionActiva: false,
+      );
+    }
+    return getLimitesDueno(userId);
+  }
 }
 
 /// Modelo con los límites del plan

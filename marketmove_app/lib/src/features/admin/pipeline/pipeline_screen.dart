@@ -746,7 +746,7 @@ class _DealFormDialogState extends State<_DealFormDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _clienteId,
+                  initialValue: _clienteId,
                   decoration: const InputDecoration(
                     labelText: 'Cliente',
                     border: OutlineInputBorder(),
@@ -766,7 +766,7 @@ class _DealFormDialogState extends State<_DealFormDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _etapa,
+                  initialValue: _etapa,
                   decoration: const InputDecoration(
                     labelText: 'Etapa',
                     border: OutlineInputBorder(),

@@ -1,8 +1,8 @@
 /// Enum que define los roles de usuario en la aplicación
+/// Solo existen 2 roles: Superadmin (ve todo) y Dueño (ve solo lo suyo)
 enum UserRole {
   superadmin,
-  dueno, // Dueño del negocio
-  empleado; // Empleado
+  dueno; // Dueño del negocio
 
   /// Convierte un string a UserRole
   static UserRole fromString(String role) {
@@ -12,15 +12,13 @@ enum UserRole {
       case 'dueno':
       case 'dueño':
         return UserRole.dueno;
-      case 'empleado':
-        return UserRole.empleado;
-      // Compatibilidad con roles antiguos
+      // Compatibilidad con roles antiguos (todos mapean a dueno)
       case 'admin':
-        return UserRole.dueno;
+      case 'empleado':
       case 'cliente':
-        return UserRole.empleado;
+        return UserRole.dueno;
       default:
-        return UserRole.empleado; // Por defecto
+        return UserRole.dueno; // Por defecto
     }
   }
 
@@ -31,8 +29,6 @@ enum UserRole {
         return 'superadmin';
       case UserRole.dueno:
         return 'dueno';
-      case UserRole.empleado:
-        return 'empleado';
     }
   }
 
@@ -41,9 +37,6 @@ enum UserRole {
 
   /// Verifica si el rol es dueño
   bool get isDueno => this == UserRole.dueno;
-
-  /// Verifica si el rol es empleado
-  bool get isEmpleado => this == UserRole.empleado;
 
   /// Verifica si el rol es admin (superadmin o dueño)
   bool get isAdmin => isSuperadmin || isDueno;

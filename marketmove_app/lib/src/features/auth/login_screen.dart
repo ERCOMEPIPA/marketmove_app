@@ -37,16 +37,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        // Redirigir según el rol del usuario
+        // Redirigir según el rol del usuario (solo 2 roles: Superadmin y Dueño)
         if (profile.isSuperadmin) {
           // Superadmin va al dashboard global
           context.go('/superadmin/dashboard');
-        } else if (profile.isDueno) {
+        } else {
           // Dueños van al dashboard de su empresa
           context.go('/admin/dashboard');
-        } else {
-          // Empleados van al catálogo
-          context.go('/empleado/catalogo');
         }
       } catch (e) {
         if (!mounted) return;

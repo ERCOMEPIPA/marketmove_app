@@ -6,7 +6,7 @@
 |-----|-------|------------|
 | **Superadmin** | `superadmin@test.com` | `SuperAdmin123!` |
 | **Dueño** | `dueno@test.com` | `Dueno123!` |
-| **Empleado** | `empleado@test.com` | `Empleado123!` |
+
 
 ---
 

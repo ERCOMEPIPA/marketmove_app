@@ -28,9 +28,6 @@ class UserProfileModel {
   /// Verifica si el usuario es dueño
   bool get isDueno => rol.isDueno;
 
-  /// Verifica si el usuario es empleado
-  bool get isEmpleado => rol.isEmpleado;
-
   /// Verifica si el usuario es admin (superadmin o dueño)
   bool get isAdmin => rol.isAdmin;
 
