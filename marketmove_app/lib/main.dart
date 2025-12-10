@@ -11,6 +11,7 @@ import 'src/features/productos/productos_screen.dart';
 import 'src/features/admin/reportes/reportes_screen.dart';
 import 'src/features/admin/clientes/clientes_screen.dart';
 import 'src/features/admin/pipeline/pipeline_screen.dart';
+import 'src/features/admin/empleados/empleados_screen.dart';
 import 'src/features/superadmin/superadmin_dashboard_v2.dart';
 import 'src/features/superadmin/planes_screen.dart';
 import 'src/features/cliente/catalogo/catalogo_screen.dart';
@@ -19,6 +20,9 @@ import 'src/features/cliente/perfil/perfil_cliente_screen.dart';
 import 'src/features/cliente/carrito/carrito_screen.dart';
 import 'src/features/cliente/search/search_screen.dart';
 import 'src/features/cliente/dashboard/cliente_dashboard_screen.dart';
+import 'src/features/empleado/dashboard/empleado_dashboard_crm.dart';
+import 'src/features/empleado/clientes/mis_clientes_screen.dart';
+import 'src/features/empleado/deals/mis_deals_screen.dart';
 import 'src/features/notificaciones/notificaciones_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
@@ -110,7 +114,7 @@ final GoRouter _router = GoRouter(
         } else if (userRole.isDueno) {
           return '/admin/dashboard';
         } else if (userRole.isEmpleado) {
-          return '/empleado/catalogo';
+          return '/empleado/dashboard';
         }
       }
     }
@@ -200,6 +204,11 @@ final GoRouter _router = GoRouter(
           name: 'admin_reportes',
           builder: (context, state) => const ReportesScreen(),
         ),
+        GoRoute(
+          path: '/admin/empleados',
+          name: 'admin_empleados',
+          builder: (context, state) => const EmpleadosScreen(),
+        ),
       ],
     ),
 
@@ -208,6 +217,21 @@ final GoRouter _router = GoRouter(
       builder: (context, state, child) =>
           ClienteShell(location: state.uri.path, child: child),
       routes: [
+        GoRoute(
+          path: '/empleado/dashboard',
+          name: 'empleado_dashboard',
+          builder: (context, state) => const EmpleadoDashboardCRM(),
+        ),
+        GoRoute(
+          path: '/empleado/clientes',
+          name: 'empleado_clientes',
+          builder: (context, state) => const MisClientesScreen(),
+        ),
+        GoRoute(
+          path: '/empleado/deals',
+          name: 'empleado_deals',
+          builder: (context, state) => const MisDealsScreen(),
+        ),
         GoRoute(
           path: '/empleado/catalogo',
           name: 'empleado_catalogo',

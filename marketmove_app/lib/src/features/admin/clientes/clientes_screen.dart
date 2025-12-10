@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../shared/services/clientes_service.dart';
+import '../../../shared/services/deals_service.dart';
 import '../../../shared/services/limites_service.dart';
 import '../../../shared/constants/app_colors.dart';
 
@@ -16,6 +17,7 @@ class ClientesScreen extends StatefulWidget {
 
 class _ClientesScreenState extends State<ClientesScreen> {
   final _clientesService = ClientesService();
+  final _dealsService = DealsService();
   final _limitesService = LimitesService();
   final _searchController = TextEditingController();
   final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 0);
@@ -191,6 +193,185 @@ class _ClientesScreenState extends State<ClientesScreen> {
             child: const Text('Eliminar'),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Crear un deal desde el detalle del cliente con el cliente pre-seleccionado
+  void _crearDealDesdeCliente(ClienteModel cliente) {
+    final tituloController = TextEditingController(
+      text: 'Deal con ${cliente.nombre}',
+    );
+    final valorController = TextEditingController(
+      text: cliente.valorEstimado.toStringAsFixed(0),
+    );
+    final descripcionController = TextEditingController();
+    String etapa = EtapasPipeline.prospecto;
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Nuevo Deal'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Cliente pre-seleccionado
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Cliente',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              cliente.nombre,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: tituloController,
+                  decoration: const InputDecoration(
+                    labelText: 'Título del Deal *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.title),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: valorController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor estimado (€)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.euro),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: etapa,
+                  decoration: const InputDecoration(
+                    labelText: 'Etapa inicial',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.view_kanban),
+                  ),
+                  items: EtapasPipeline.activas.map((e) {
+                    return DropdownMenuItem(
+                      value: e,
+                      child: Text(EtapasPipeline.nombre(e)),
+                    );
+                  }).toList(),
+                  onChanged: (v) => setDialogState(() => etapa = v!),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descripcionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Descripción (opcional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.description),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (tituloController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('El título es requerido'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => isLoading = true);
+
+                      try {
+                        final deal = DealModel(
+                          id: '',
+                          negocioId: widget.negocioId,
+                          clienteId: cliente.id,
+                          titulo: tituloController.text.trim(),
+                          descripcion: descripcionController.text.trim().isEmpty
+                              ? null
+                              : descripcionController.text.trim(),
+                          valor: double.tryParse(valorController.text) ?? 0,
+                          etapa: etapa,
+                          probabilidad: EtapasPipeline.probabilidadDefecto(
+                            etapa,
+                          ),
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                        );
+
+                        await _dealsService.crearDeal(deal);
+
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            SnackBar(
+                              content: Text('Deal "${deal.titulo}" creado'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isLoading = false);
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Crear Deal'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -705,8 +886,8 @@ class _ClientesScreenState extends State<ClientesScreen> {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () {
-                        // TODO: Crear deal desde cliente
                         Navigator.pop(context);
+                        _crearDealDesdeCliente(cliente);
                       },
                       icon: const Icon(Icons.add_business),
                       label: const Text('Crear Deal'),

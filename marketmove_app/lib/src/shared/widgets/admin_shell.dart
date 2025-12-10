@@ -92,6 +92,12 @@ class AdminShell extends StatelessWidget {
               title: 'Pipeline',
               route: '/admin/pipeline',
             ),
+            _buildDrawerItem(
+              context: context,
+              icon: Icons.badge,
+              title: 'Empleados',
+              route: '/admin/empleados',
+            ),
             const Divider(),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

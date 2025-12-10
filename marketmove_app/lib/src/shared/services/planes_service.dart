@@ -119,6 +119,47 @@ class PlanesService {
       throw Exception('Error al asignar plan: $e');
     }
   }
+
+  /// Obtener el plan básico (el más barato o el que se llame "Básico")
+  /// Se usa para asignar automáticamente a nuevos dueños
+  Future<PlanModel?> getPlanBasico() async {
+    try {
+      final planes = await getPlanes();
+      if (planes.isEmpty) return null;
+
+      // Buscar primero por nombre "Básico"
+      final planBasico = planes
+          .where(
+            (p) =>
+                p.nombre.toLowerCase().contains('básico') ||
+                p.nombre.toLowerCase().contains('basico'),
+          )
+          .firstOrNull;
+
+      if (planBasico != null) return planBasico;
+
+      // Si no hay plan "Básico", retornar el más barato activo
+      final planesActivos = planes.where((p) => p.activo).toList();
+      if (planesActivos.isEmpty) return planes.first;
+
+      planesActivos.sort((a, b) => a.precio.compareTo(b.precio));
+      return planesActivos.first;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Asignar plan básico a un nuevo dueño
+  Future<void> asignarPlanBasico(String duenoId) async {
+    try {
+      final planBasico = await getPlanBasico();
+      if (planBasico != null) {
+        await asignarPlan(duenoId, planBasico.id);
+      }
+    } catch (e) {
+      // Si falla, continuar sin plan (usará límites por defecto)
+    }
+  }
 }
 
 /// Servicio extendido para Superadmin

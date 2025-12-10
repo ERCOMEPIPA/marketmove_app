@@ -72,12 +72,49 @@ class AuthService {
           })
           .eq('id', response.user!.id);
 
+      // Si es un dueño, asignar plan básico automáticamente
+      if (rol == UserRole.dueno) {
+        await _asignarPlanBasico(response.user!.id);
+      }
+
       // Obtener el perfil actualizado
       final profile = await getUserProfile(response.user!.id);
 
       return profile;
     } catch (e) {
       throw Exception('Error al registrar usuario: $e');
+    }
+  }
+
+  /// Asigna el plan básico a un nuevo dueño
+  Future<void> _asignarPlanBasico(String duenoId) async {
+    try {
+      // Obtener el plan básico (el más barato o que contenga "básico" en el nombre)
+      final planes = await _supabase.from('planes').select().order('precio');
+
+      if (planes.isEmpty) return;
+
+      // Buscar plan llamado "Básico" o el más barato
+      Map<String, dynamic>? planBasico;
+      for (var plan in planes) {
+        final nombre = (plan['nombre'] as String?)?.toLowerCase() ?? '';
+        if (nombre.contains('básico') || nombre.contains('basico')) {
+          planBasico = plan;
+          break;
+        }
+      }
+
+      // Si no encontró "Básico", usar el más barato
+      planBasico ??= planes.first;
+
+      // Asignar el plan al dueño
+      await _supabase
+          .from('perfiles')
+          .update({'plan_id': planBasico['id'], 'suscripcion_estado': 'activa'})
+          .eq('id', duenoId);
+    } catch (e) {
+      // Si falla la asignación de plan, continuamos sin plan
+      // El usuario podrá seleccionar un plan más tarde
     }
   }
 

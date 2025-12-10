@@ -20,25 +20,39 @@ class ClienteShell extends StatefulWidget {
 class _ClienteShellState extends State<ClienteShell> {
   int _getCurrentIndex() {
     final location = widget.location;
-    if (location.startsWith('/empleado/catalogo')) return 0;
-    if (location.startsWith('/empleado/compras')) return 1;
-    if (location.startsWith('/empleado/perfil')) return 2;
+    // CRM Routes
+    if (location.startsWith('/empleado/dashboard')) return 0;
+    if (location.startsWith('/empleado/clientes')) return 1;
+    if (location.startsWith('/empleado/deals')) return 2;
+    // Marketplace Routes
+    if (location.startsWith('/empleado/catalogo')) return 3;
+    if (location.startsWith('/empleado/compras')) return 4;
+    if (location.startsWith('/empleado/perfil')) return 5;
     // Compatibilidad legacy
-    if (location.startsWith('/cliente/catalogo')) return 0;
-    if (location.startsWith('/cliente/compras')) return 1;
-    if (location.startsWith('/cliente/perfil')) return 2;
+    if (location.startsWith('/cliente/catalogo')) return 3;
+    if (location.startsWith('/cliente/compras')) return 4;
+    if (location.startsWith('/cliente/perfil')) return 5;
     return 0;
   }
 
   void _onItemTapped(int index) {
     switch (index) {
       case 0:
-        context.go('/empleado/catalogo');
+        context.go('/empleado/dashboard');
         break;
       case 1:
-        context.go('/empleado/compras');
+        context.go('/empleado/clientes');
         break;
       case 2:
+        context.go('/empleado/deals');
+        break;
+      case 3:
+        context.go('/empleado/catalogo');
+        break;
+      case 4:
+        context.go('/empleado/compras');
+        break;
+      case 5:
         context.go('/empleado/perfil');
         break;
     }
@@ -113,12 +127,20 @@ class _ClienteShellState extends State<ClienteShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _getCurrentIndex(),
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Clientes'),
+          BottomNavigationBarItem(icon: Icon(Icons.handshake), label: 'Deals'),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Catálogo'),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag),
-            label: 'Mis Compras',
+            label: 'Compras',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],

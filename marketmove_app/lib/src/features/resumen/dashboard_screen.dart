@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../shared/services/dashboard_service.dart';
 import '../../shared/services/auth_service.dart';
+import '../../shared/services/limites_service.dart';
 import '../../shared/widgets/loading_indicator.dart';
+import '../../shared/widgets/plan_usage_widget.dart';
 import '../../shared/constants/app_colors.dart';
 import 'widgets/kpi_card.dart';
 import 'widgets/sales_chart.dart';
@@ -20,10 +22,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _dashboardService = DashboardService();
   final _authService = AuthService();
+  final _limitesService = LimitesService();
   final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 
   DashboardMetrics? _metrics;
   List<Map<String, dynamic>> _productosStockBajo = [];
+  PlanLimites? _planLimites;
   bool _isLoading = true;
   String? _error;
 
@@ -46,12 +50,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final metrics = await _dashboardService.getMetrics(user.id);
-      final productosStockBajo =
-          await _dashboardService.getProductosStockBajo(user.id);
+      final productosStockBajo = await _dashboardService.getProductosStockBajo(
+        user.id,
+      );
+
+      // Cargar límites del plan
+      PlanLimites? planLimites;
+      try {
+        planLimites = await _limitesService.getLimitesDueno(user.id);
+      } catch (_) {}
 
       setState(() {
         _metrics = metrics;
         _productosStockBajo = productosStockBajo;
+        _planLimites = planLimites;
         _isLoading = false;
       });
     } catch (e) {
@@ -65,17 +77,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(),
-      );
+      return const Scaffold(body: LoadingIndicator());
     }
 
     if (_error != null) {
       return Scaffold(
-        body: ErrorState(
-          message: _error!,
-          onRetry: _loadData,
-        ),
+        body: ErrorState(message: _error!, onRetry: _loadData),
       );
     }
 
@@ -99,16 +106,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         'Dashboard',
-                        style:
-                            Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('EEEE, d MMMM yyyy').format(
-                          DateTime.now(),
-                        ),
+                        DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
@@ -175,14 +178,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
 
+              // Widget de uso del plan
+              if (_planLimites != null) ...[
+                const SizedBox(height: 24),
+                PlanUsageWidget(
+                  limites: _planLimites!,
+                  onUpgrade: () {
+                    // TODO: Navegar a pantalla de planes
+                  },
+                ),
+              ],
+
               const SizedBox(height: 32),
 
               // Gráfico de ventas vs gastos
               Text(
                 'Ventas vs Gastos (Últimos 7 días)',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Container(
@@ -192,9 +206,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: SalesChart(
-                  data: _generateSampleSalesData(),
-                ),
+                child: SalesChart(data: _generateSampleSalesData()),
               ),
               const SizedBox(height: 8),
               const ChartLegend(),
@@ -204,9 +216,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Gráfico de balance mensual
               Text(
                 'Balance Mensual',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Container(
@@ -216,9 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: BalanceChart(
-                  data: _generateSampleBalanceData(),
-                ),
+                child: BalanceChart(data: _generateSampleBalanceData()),
               ),
 
               const SizedBox(height: 32),
@@ -232,9 +242,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Accesos rápidos
               Text(
                 'Accesos Rápidos',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               _buildQuickAccessButtons(context),
@@ -276,9 +286,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'Productos con Stock Bajo',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.warning,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.warning,
+                ),
               ),
               const Spacer(),
               TextButton(
@@ -288,58 +298,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          ...List.generate(
-            _productosStockBajo.length.clamp(0, 5),
-            (index) {
-              final producto = _productosStockBajo[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.warning,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+          ...List.generate(_productosStockBajo.length.clamp(0, 5), (index) {
+            final producto = _productosStockBajo[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.warning,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            producto['nombre'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          producto['nombre'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Stock actual: ${producto['stock']} (mínimo: ${producto['stock_minimo']})',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Stock actual: ${producto['stock']} (mínimo: ${producto['stock_minimo']})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Chip(
-                      label: Text(
-                        '${producto['stock']} unid.',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      backgroundColor: AppColors.warning.withOpacity(0.2),
-                      side: BorderSide.none,
+                  ),
+                  Chip(
+                    label: Text(
+                      '${producto['stock']} unid.',
+                      style: const TextStyle(fontSize: 12),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    backgroundColor: AppColors.warning.withOpacity(0.2),
+                    side: BorderSide.none,
+                  ),
+                ],
+              ),
+            );
+          }),
           if (_productosStockBajo.length > 5)
             Center(
               child: Text(
