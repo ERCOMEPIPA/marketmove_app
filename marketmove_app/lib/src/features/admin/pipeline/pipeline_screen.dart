@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../shared/services/deals_service.dart';
 import '../../../shared/services/clientes_service.dart';
+import '../../../shared/services/export_service.dart';
 import '../../../shared/constants/app_colors.dart';
+import '../../../shared/widgets/limite_alert_widget.dart';
 
 /// Pantalla de Pipeline de Ventas para Dueños
 class PipelineScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class PipelineScreen extends StatefulWidget {
 class _PipelineScreenState extends State<PipelineScreen> {
   final _dealsService = DealsService();
   final _clientesService = ClientesService();
+  final _exportService = ExportService();
   final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 0);
 
   Map<String, List<DealModel>> _dealsPorEtapa = {};
@@ -107,14 +110,57 @@ class _PipelineScreenState extends State<PipelineScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              FloatingActionButton.small(
-                                heroTag: 'addDeal',
-                                onPressed: () => _mostrarFormularioDeal(),
-                                backgroundColor: Colors.white,
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Color(0xFF6366F1),
-                                ),
+                              Row(
+                                children: [
+                                  // Botón exportar CSV
+                                  FloatingActionButton.small(
+                                    heroTag: 'exportPipeline',
+                                    onPressed: _dealsPorEtapa.isEmpty
+                                        ? null
+                                        : () {
+                                            // Obtener todos los deals
+                                            final todosDeals = <DealModel>[];
+                                            for (var deals
+                                                in _dealsPorEtapa.values) {
+                                              todosDeals.addAll(deals);
+                                            }
+                                            _exportService.exportarDealsCSV(
+                                              todosDeals,
+                                            );
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Exportando pipeline a CSV...',
+                                                ),
+                                                backgroundColor:
+                                                    AppColors.success,
+                                              ),
+                                            );
+                                          },
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.9,
+                                    ),
+                                    child: Icon(
+                                      Icons.download,
+                                      color: _dealsPorEtapa.isEmpty
+                                          ? Colors.grey
+                                          : const Color(0xFF6366F1),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Botón añadir deal
+                                  FloatingActionButton.small(
+                                    heroTag: 'addDeal',
+                                    onPressed: () => _mostrarFormularioDeal(),
+                                    backgroundColor: Colors.white,
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Color(0xFF6366F1),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -307,6 +353,14 @@ class _PipelineScreenState extends State<PipelineScreen> {
   }
 
   Widget _buildDealCard(DealModel deal, Color etapaColor) {
+    // Verificar si el deal está próximo a vencer
+    final bool esUrgente =
+        deal.fechaCierreEstimada != null &&
+        deal.fechaCierreEstimada!.isBefore(
+          DateTime.now().add(const Duration(days: 7)),
+        ) &&
+        deal.fechaCierreEstimada!.isAfter(DateTime.now());
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -318,6 +372,11 @@ class _PipelineScreenState extends State<PipelineScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Badge de urgente si aplica
+              if (esUrgente && deal.fechaCierreEstimada != null) ...[
+                DealUrgenteBadge(fechaCierre: deal.fechaCierreEstimada!),
+                const SizedBox(height: 6),
+              ],
               Text(
                 deal.titulo,
                 style: const TextStyle(

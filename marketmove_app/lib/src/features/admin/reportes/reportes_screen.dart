@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 import '../../../shared/services/ventas_service.dart';
 import '../../../shared/services/gastos_service.dart';
 import '../../../shared/services/auth_service.dart';
+import '../../../shared/services/export_service.dart';
 import '../../../shared/models/venta_model.dart';
 import '../../../shared/models/gasto_model.dart';
+import '../../../shared/constants/app_colors.dart';
 
 /// Pantalla de reportes mejorada con gráficos y estadísticas
 class ReportesScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
   final _ventasService = VentasService();
   final _gastosService = GastosService();
   final _authService = AuthService();
+  final _exportService = ExportService();
   final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 
   List<VentaModel> _ventas = [];
@@ -119,16 +122,99 @@ class _ReportesScreenState extends State<ReportesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Reportes y Análisis',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Últimos 30 días',
-                style: TextStyle(color: Colors.grey[600]),
+              // Header con título y botón de exportar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reportes y Análisis',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Últimos 30 días',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  // Botón de exportar con menú
+                  PopupMenuButton<String>(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.download, color: AppColors.primary),
+                    ),
+                    tooltip: 'Exportar',
+                    onSelected: (value) {
+                      final totalVentas = _ventas.fold<double>(
+                        0,
+                        (sum, v) => sum + v.monto,
+                      );
+                      final totalGastos = _gastos.fold<double>(
+                        0,
+                        (sum, g) => sum + g.monto,
+                      );
+
+                      switch (value) {
+                        case 'ventas':
+                          _exportService.exportarVentasCSV(_ventas);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Exportando ventas a CSV...'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                          break;
+                        case 'reporte':
+                          _exportService.exportarReporteMensualCSV(
+                            periodo: 'Últimos 30 días',
+                            totalVentas: totalVentas,
+                            totalGastos: totalGastos,
+                            ventas: _ventas,
+                            gastos: _gastos,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Exportando reporte mensual a CSV...',
+                              ),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'ventas',
+                        child: Row(
+                          children: [
+                            Icon(Icons.receipt_long, size: 20),
+                            SizedBox(width: 8),
+                            Text('Exportar Ventas'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'reporte',
+                        child: Row(
+                          children: [
+                            Icon(Icons.summarize, size: 20),
+                            SizedBox(width: 8),
+                            Text('Reporte Completo'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 

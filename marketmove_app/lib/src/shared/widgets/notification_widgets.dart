@@ -29,6 +29,12 @@ class NotificationSnackbar extends StatelessWidget {
         return Colors.red[600]!;
       case NotificationType.info:
         return Colors.grey[600]!;
+      case NotificationType.limiteAlcanzado:
+        return Colors.orange[700]!;
+      case NotificationType.dealProximoVencer:
+        return Colors.deepOrange[600]!;
+      case NotificationType.suscripcionProxima:
+        return Colors.indigo[600]!;
     }
   }
 
@@ -48,6 +54,12 @@ class NotificationSnackbar extends StatelessWidget {
         return Icons.error;
       case NotificationType.info:
         return Icons.info;
+      case NotificationType.limiteAlcanzado:
+        return Icons.warning_amber;
+      case NotificationType.dealProximoVencer:
+        return Icons.access_time;
+      case NotificationType.suscripcionProxima:
+        return Icons.credit_card;
     }
   }
 
@@ -69,11 +81,7 @@ class NotificationSnackbar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            _getIcon(notification.tipo),
-            color: Colors.white,
-            size: 24,
-          ),
+          Icon(_getIcon(notification.tipo), color: Colors.white, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -93,10 +101,7 @@ class NotificationSnackbar extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   notification.mensaje,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -106,11 +111,7 @@ class NotificationSnackbar extends StatelessWidget {
           const SizedBox(width: 12),
           GestureDetector(
             onTap: onDismiss,
-            child: Icon(
-              Icons.close,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: Icon(Icons.close, color: Colors.white, size: 18),
           ),
         ],
       ),
@@ -158,10 +159,7 @@ class NotificationCenter extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         'No hay notificaciones',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -216,6 +214,12 @@ class NotificationTile extends StatelessWidget {
         return Colors.red[50]!;
       case NotificationType.info:
         return Colors.grey[50]!;
+      case NotificationType.limiteAlcanzado:
+        return Colors.orange[50]!;
+      case NotificationType.dealProximoVencer:
+        return Colors.deepOrange[50]!;
+      case NotificationType.suscripcionProxima:
+        return Colors.indigo[50]!;
     }
   }
 
@@ -235,6 +239,12 @@ class NotificationTile extends StatelessWidget {
         return Icons.error;
       case NotificationType.info:
         return Icons.info;
+      case NotificationType.limiteAlcanzado:
+        return Icons.warning_amber;
+      case NotificationType.dealProximoVencer:
+        return Icons.access_time;
+      case NotificationType.suscripcionProxima:
+        return Icons.credit_card;
     }
   }
 
@@ -243,15 +253,13 @@ class NotificationTile extends StatelessWidget {
     return Container(
       color: notification.leida ? Colors.white : _getColor(notification.tipo),
       child: ListTile(
-        leading: Icon(
-          _getIcon(notification.tipo),
-          size: 28,
-        ),
+        leading: Icon(_getIcon(notification.tipo), size: 28),
         title: Text(
           notification.titulo,
           style: TextStyle(
-            fontWeight:
-                notification.leida ? FontWeight.normal : FontWeight.bold,
+            fontWeight: notification.leida
+                ? FontWeight.normal
+                : FontWeight.bold,
           ),
         ),
         subtitle: Column(
@@ -266,10 +274,7 @@ class NotificationTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               _formatTime(notification.fecha),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),

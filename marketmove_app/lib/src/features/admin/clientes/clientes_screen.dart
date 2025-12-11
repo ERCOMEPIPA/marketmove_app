@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../shared/services/clientes_service.dart';
 import '../../../shared/services/deals_service.dart';
 import '../../../shared/services/limites_service.dart';
+import '../../../shared/services/export_service.dart';
 import '../../../shared/constants/app_colors.dart';
 
 /// Pantalla de gestión de clientes para Dueños
@@ -19,6 +20,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
   final _clientesService = ClientesService();
   final _dealsService = DealsService();
   final _limitesService = LimitesService();
+  final _exportService = ExportService();
   final _searchController = TextEditingController();
   final _currencyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 0);
 
@@ -421,11 +423,45 @@ class _ClientesScreenState extends State<ClientesScreen> {
                             ),
                           ],
                         ),
-                        FloatingActionButton(
-                          heroTag: 'addCliente',
-                          onPressed: () => _mostrarFormularioCliente(),
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.add, color: AppColors.primary),
+                        Row(
+                          children: [
+                            // Botón exportar CSV
+                            FloatingActionButton.small(
+                              heroTag: 'exportClientes',
+                              onPressed: _clientes.isEmpty
+                                  ? null
+                                  : () {
+                                      _exportService.exportarClientesCSV(
+                                        _clientes,
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Exportando clientes a CSV...',
+                                          ),
+                                          backgroundColor: AppColors.success,
+                                        ),
+                                      );
+                                    },
+                              backgroundColor: Colors.white.withOpacity(0.9),
+                              child: Icon(
+                                Icons.download,
+                                color: _clientes.isEmpty
+                                    ? Colors.grey
+                                    : AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Botón añadir cliente
+                            FloatingActionButton(
+                              heroTag: 'addCliente',
+                              onPressed: () => _mostrarFormularioCliente(),
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.add, color: AppColors.primary),
+                            ),
+                          ],
                         ),
                       ],
                     ),

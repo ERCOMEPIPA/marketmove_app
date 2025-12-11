@@ -28,16 +28,16 @@
 ## 🟢 Mejoras Opcionales (Nice to Have)
 
 ### 📊 Exportación de Datos
-- [ ] Exportar lista de clientes a CSV/Excel
-- [ ] Exportar pipeline a PDF
-- [ ] Exportar facturas/historial de pagos
-- [ ] Generar reportes mensuales automáticos
+- [x] Exportar lista de clientes a CSV/Excel
+- [x] Exportar pipeline a CSV
+- [x] Exportar facturas/historial de pagos (ventas)
+- [x] Generar reportes mensuales automáticos
 
 ### 🔔 Notificaciones
-- [ ] Notificación cuando se alcanza el 80% del límite
-- [ ] Recordatorio de renovación de suscripción
-- [ ] Alertas de deals próximos a vencer
-- [ ] Notificación por email de nuevos clientes
+- [x] Notificación cuando se alcanza el 80% del límite
+- [ ] Recordatorio de renovación de suscripción (requiere Edge Function)
+- [x] Alertas de deals próximos a vencer
+- [ ] Notificación por email de nuevos clientes (requiere Edge Function)
 
 ### 🔍 Filtros Avanzados
 - [ ] Filtrar pipeline por empleado asignado
@@ -52,10 +52,10 @@
 - [ ] Comparativa mensual de ventas
 
 ### 🎨 Mejoras de UX
-- [ ] Modo oscuro
-- [ ] Personalización de colores por negocio
-- [ ] Onboarding guiado para nuevos usuarios
-- [ ] Tour interactivo de funcionalidades
+- [x] Modo oscuro
+- [ ] Personalización de colores por negocio (requiere cambios en BD)
+- [x] Onboarding guiado para nuevos usuarios
+- [ ] Tour interactivo de funcionalidades (dependencia instalada)
 
 ### 📱 Funcionalidades Adicionales
 - [ ] App móvil nativa (actualmente solo web)

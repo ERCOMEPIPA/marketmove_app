@@ -16,6 +16,7 @@ import 'src/features/superadmin/superadmin_dashboard_v2.dart';
 import 'src/features/superadmin/planes_screen.dart';
 import 'src/features/admin/planes/seleccion_plan_screen.dart';
 import 'src/features/notificaciones/notificaciones_screen.dart';
+import 'src/features/settings/settings_screen.dart';
 import 'src/shared/config/supabase_config.dart';
 import 'src/shared/config/theme_config.dart';
 import 'src/shared/widgets/superadmin_shell.dart';
@@ -27,6 +28,7 @@ import 'src/shared/services/productos_service.dart';
 import 'src/shared/services/notification_service.dart';
 import 'src/shared/services/search_service.dart';
 import 'src/shared/services/reports_service.dart';
+import 'src/shared/services/theme_service.dart';
 
 // Instancia global del servicio de autenticación
 final _authService = AuthService();
@@ -41,11 +43,17 @@ Future<void> main() async {
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  runApp(const MarketMoveApp());
+  // Inicializar servicio de tema
+  final themeService = ThemeService();
+  await themeService.init();
+
+  runApp(MarketMoveApp(themeService: themeService));
 }
 
 class MarketMoveApp extends StatelessWidget {
-  const MarketMoveApp({super.key});
+  final ThemeService themeService;
+
+  const MarketMoveApp({super.key, required this.themeService});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +61,7 @@ class MarketMoveApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: themeService),
         ChangeNotifierProvider(create: (context) => CartService()),
         ChangeNotifierProvider(create: (context) => notificationService),
         ChangeNotifierProvider(
@@ -64,17 +73,23 @@ class MarketMoveApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (context) => ReportsService()),
       ],
-      child: MaterialApp.router(
-        title: 'MarketMove',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeConfig.lightTheme,
-        routerConfig: _router,
-        builder: (context, child) {
-          return Stack(
-            children: [
-              child ?? const SizedBox.shrink(),
-              const NotificationOverlay(),
-            ],
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) {
+          return MaterialApp.router(
+            title: 'MarketMove',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeConfig.lightTheme,
+            darkTheme: ThemeConfig.darkTheme,
+            themeMode: themeService.themeMode,
+            routerConfig: _router,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  child ?? const SizedBox.shrink(),
+                  const NotificationOverlay(),
+                ],
+              );
+            },
           );
         },
       ),
@@ -203,6 +218,11 @@ final GoRouter _router = GoRouter(
           path: '/admin/planes',
           name: 'admin_planes',
           builder: (context, state) => const SeleccionPlanScreen(),
+        ),
+        GoRoute(
+          path: '/admin/settings',
+          name: 'admin_settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),

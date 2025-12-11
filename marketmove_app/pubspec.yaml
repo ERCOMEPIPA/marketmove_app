@@ -50,6 +50,7 @@ dependencies:
   fl_chart: ^1.1.1
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.2
+  tutorial_coach_mark: ^1.2.11
 
 dev_dependencies:
   flutter_test:

@@ -105,7 +105,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
                 const SizedBox(height: 12),
                 // Selector de tipo de facturación
                 DropdownButtonFormField<TipoFacturacion>(
-                  value: tipoFacturacion,
+                  initialValue: tipoFacturacion,
                   decoration: const InputDecoration(
                     labelText: 'Tipo de Facturación',
                     border: OutlineInputBorder(),
