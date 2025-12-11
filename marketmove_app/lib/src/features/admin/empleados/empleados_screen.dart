@@ -225,42 +225,87 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                         } else {
                           // Guardar la sesión actual del dueño
                           final duenoSession = _supabase.auth.currentSession;
+                          final duenoRefreshToken = duenoSession?.refreshToken;
 
-                          // Crear nuevo empleado
-                          final response = await _supabase.auth.signUp(
-                            email: emailController.text.trim(),
-                            password: passwordController.text,
-                          );
-
-                          if (response.user != null) {
-                            // Esperar un momento para que el trigger cree el perfil
-                            await Future.delayed(
-                              const Duration(milliseconds: 500),
+                          try {
+                            // Crear nuevo usuario empleado
+                            // NOTA: Si Supabase tiene "Confirm email" habilitado,
+                            // el empleado recibirá un email de confirmación
+                            final response = await _supabase.auth.signUp(
+                              email: emailController.text.trim(),
+                              password: passwordController.text,
+                              data: {
+                                'rol': 'empleado',
+                                'negocio_id': _duenoId,
+                                'nombre': nombreController.text.trim(),
+                              },
                             );
 
-                            // Actualizar el perfil con la info del negocio
-                            // Usar upsert para asegurar que funcione incluso si el perfil no existe
-                            await _supabase.from('perfiles').upsert({
-                              'id': response.user!.id,
-                              'email': emailController.text.trim(),
-                              'rol': 'empleado',
-                              'negocio_id': _duenoId,
-                              'nombre_negocio':
-                                  nombreController.text.trim().isEmpty
-                                  ? null
-                                  : nombreController.text.trim(),
-                              'telefono': telefonoController.text.trim().isEmpty
-                                  ? null
-                                  : telefonoController.text.trim(),
-                              'activo': true,
-                            });
+                            // Verificar si el usuario fue creado
+                            if (response.user != null) {
+                              final empleadoId = response.user!.id;
 
-                            // Restaurar la sesión del dueño
-                            if (duenoSession != null) {
-                              await _supabase.auth.setSession(
-                                duenoSession.refreshToken!,
-                              );
+                              // La sesión puede haber cambiado, restaurar la del dueño primero
+                              if (duenoRefreshToken != null) {
+                                try {
+                                  await _supabase.auth.setSession(
+                                    duenoRefreshToken,
+                                  );
+                                } catch (_) {
+                                  // Si falla, intentar refrescar
+                                  await _supabase.auth.refreshSession();
+                                }
+                              }
+
+                              // Ahora crear/actualizar el perfil del empleado
+                              // Esto debe hacerse con la sesión del dueño activa
+                              await _supabase.from('perfiles').upsert({
+                                'id': empleadoId,
+                                'email': emailController.text.trim(),
+                                'rol': 'empleado',
+                                'negocio_id': _duenoId,
+                                'nombre_negocio':
+                                    nombreController.text.trim().isEmpty
+                                    ? null
+                                    : nombreController.text.trim(),
+                                'telefono':
+                                    telefonoController.text.trim().isEmpty
+                                    ? null
+                                    : telefonoController.text.trim(),
+                                'activo': true,
+                              });
+                            } else if (response.session == null) {
+                              // Usuario creado pero necesita confirmación de email
+                              // Restaurar sesión del dueño
+                              if (duenoRefreshToken != null) {
+                                await _supabase.auth.setSession(
+                                  duenoRefreshToken,
+                                );
+                              }
+
+                              // Mostrar mensaje informativo
+                              if (mounted) {
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Empleado invitado. Debe confirmar su email para activarse.',
+                                    ),
+                                    backgroundColor: AppColors.info,
+                                    duration: Duration(seconds: 4),
+                                  ),
+                                );
+                              }
                             }
+                          } catch (e) {
+                            // Asegurar que restauramos la sesión del dueño
+                            if (duenoRefreshToken != null) {
+                              try {
+                                await _supabase.auth.setSession(
+                                  duenoRefreshToken,
+                                );
+                              } catch (_) {}
+                            }
+                            rethrow;
                           }
                         }
 

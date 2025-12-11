@@ -1,14 +1,18 @@
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:io' show File, Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 import 'clientes_service.dart';
 import 'deals_service.dart';
 import '../models/venta_model.dart';
 import '../models/gasto_model.dart';
 
 /// Servicio para exportar datos a CSV
+/// Soporta tanto web como móvil (Android/iOS)
 class ExportService {
   static final ExportService _instance = ExportService._internal();
   factory ExportService() => _instance;
@@ -22,7 +26,7 @@ class ExportService {
   );
 
   /// Exportar lista de clientes a CSV
-  void exportarClientesCSV(List<ClienteModel> clientes) {
+  Future<void> exportarClientesCSV(List<ClienteModel> clientes) async {
     if (clientes.isEmpty) {
       _mostrarMensaje('No hay clientes para exportar');
       return;
@@ -67,12 +71,12 @@ class ExportService {
     final fecha = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final nombreArchivo = 'clientes_$fecha.csv';
 
-    // Descargar
-    _descargarArchivo(csvContent, nombreArchivo);
+    // Descargar/Compartir
+    await _exportarArchivo(csvContent, nombreArchivo);
   }
 
   /// Exportar lista de deals/pipeline a CSV
-  void exportarDealsCSV(List<DealModel> deals) {
+  Future<void> exportarDealsCSV(List<DealModel> deals) async {
     if (deals.isEmpty) {
       _mostrarMensaje('No hay deals para exportar');
       return;
@@ -123,12 +127,12 @@ class ExportService {
     final fecha = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final nombreArchivo = 'pipeline_$fecha.csv';
 
-    // Descargar
-    _descargarArchivo(csvContent, nombreArchivo);
+    // Descargar/Compartir
+    await _exportarArchivo(csvContent, nombreArchivo);
   }
 
   /// Exportar historial de ventas a CSV
-  void exportarVentasCSV(List<VentaModel> ventas) {
+  Future<void> exportarVentasCSV(List<VentaModel> ventas) async {
     if (ventas.isEmpty) {
       _mostrarMensaje('No hay ventas para exportar');
       return;
@@ -163,19 +167,19 @@ class ExportService {
     final fecha = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final nombreArchivo = 'ventas_$fecha.csv';
 
-    // Descargar
-    _descargarArchivo(csvContent, nombreArchivo);
+    // Descargar/Compartir
+    await _exportarArchivo(csvContent, nombreArchivo);
   }
 
   /// Exportar reporte mensual completo a CSV
   /// Incluye resumen y detalle de ventas y gastos
-  void exportarReporteMensualCSV({
+  Future<void> exportarReporteMensualCSV({
     required String periodo,
     required double totalVentas,
     required double totalGastos,
     required List<VentaModel> ventas,
     required List<GastoModel> gastos,
-  }) {
+  }) async {
     final buffer = StringBuffer();
     final balance = totalVentas - totalGastos;
 
@@ -239,8 +243,8 @@ class ExportService {
     final fecha = DateFormat('yyyy-MM').format(DateTime.now());
     final nombreArchivo = 'reporte_mensual_$fecha.csv';
 
-    // Descargar
-    _descargarArchivo(buffer.toString(), nombreArchivo);
+    // Descargar/Compartir
+    await _exportarArchivo(buffer.toString(), nombreArchivo);
   }
 
   /// Generar contenido CSV con BOM para compatibilidad con Excel
@@ -271,33 +275,60 @@ class ExportService {
     return valor;
   }
 
-  /// Descargar archivo en navegador web
-  void _descargarArchivo(String contenido, String nombreArchivo) {
+  /// Exportar archivo - usa método apropiado según la plataforma
+  Future<void> _exportarArchivo(String contenido, String nombreArchivo) async {
     try {
-      // Crear Blob con el contenido
-      final bytes = utf8.encode(contenido);
-      final blob = html.Blob([bytes], 'text/csv;charset=utf-8');
-
-      // Crear URL temporal
-      final url = html.Url.createObjectUrlFromBlob(blob);
-
-      // Crear elemento anchor para descargar
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', nombreArchivo)
-        ..style.display = 'none';
-
-      // Añadir al documento, hacer click y remover
-      html.document.body!.children.add(anchor);
-      anchor.click();
-      anchor.remove();
-
-      // Limpiar URL
-      html.Url.revokeObjectUrl(url);
-
-      _mostrarMensaje('Archivo "$nombreArchivo" descargado correctamente');
+      if (kIsWeb) {
+        // Para web, usamos importación condicional
+        await _exportarArchivoWeb(contenido, nombreArchivo);
+      } else {
+        // Para móvil (Android/iOS), guardamos y compartimos
+        await _exportarArchivoMovil(contenido, nombreArchivo);
+      }
     } catch (e) {
-      _mostrarMensaje('Error al descargar: $e');
+      _mostrarMensaje('Error al exportar: $e');
     }
+  }
+
+  /// Exportar archivo en plataformas móviles (Android/iOS)
+  Future<void> _exportarArchivoMovil(
+    String contenido,
+    String nombreArchivo,
+  ) async {
+    try {
+      // Obtener directorio temporal
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/$nombreArchivo';
+
+      // Escribir archivo
+      final file = File(filePath);
+      await file.writeAsString(contenido, encoding: utf8);
+
+      // Compartir archivo
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Exportación: $nombreArchivo',
+        text: 'Archivo CSV exportado desde MarketMove',
+      );
+
+      _mostrarMensaje('Archivo "$nombreArchivo" listo para compartir');
+    } catch (e) {
+      _mostrarMensaje('Error al exportar en móvil: $e');
+    }
+  }
+
+  /// Exportar archivo en web
+  /// Este método solo se ejecuta en web
+  Future<void> _exportarArchivoWeb(
+    String contenido,
+    String nombreArchivo,
+  ) async {
+    // En web, necesitamos usar una importación condicional
+    // Por ahora, mostramos un mensaje ya que la funcionalidad web
+    // requiere imports específicos que no están disponibles en móvil
+    _mostrarMensaje(
+      'La exportación web no está disponible en esta versión móvil',
+    );
   }
 
   /// Mostrar mensaje al usuario (solo imprime por ahora)

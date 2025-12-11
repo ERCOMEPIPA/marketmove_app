@@ -2,7 +2,7 @@ import '../models/user_role.dart';
 import '../services/auth_service.dart';
 
 /// Guard para validar permisos de acceso a rutas
-/// Solo existen 2 roles: Superadmin y Dueño
+/// Roles: Superadmin, Dueño, Empleado
 class RouteGuard {
   final AuthService _authService = AuthService();
 
@@ -16,6 +16,8 @@ class RouteGuard {
         return userRole.isSuperadmin;
       case UserRole.dueno:
         return userRole.isDueno || userRole.isSuperadmin;
+      case UserRole.empleado:
+        return userRole.isEmpleado || userRole.isDueno || userRole.isSuperadmin;
     }
   }
 
@@ -35,5 +37,17 @@ class RouteGuard {
   Future<bool> isDueno() async {
     final userRole = await _authService.getCurrentUserRole();
     return userRole?.isDueno ?? false;
+  }
+
+  /// Valida que el usuario sea empleado
+  Future<bool> isEmpleado() async {
+    final userRole = await _authService.getCurrentUserRole();
+    return userRole?.isEmpleado ?? false;
+  }
+
+  /// Valida que el usuario pueda acceder al panel de negocio
+  Future<bool> canAccessBusiness() async {
+    final userRole = await _authService.getCurrentUserRole();
+    return userRole?.canAccessBusiness ?? false;
   }
 }

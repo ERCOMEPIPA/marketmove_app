@@ -128,54 +128,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 24),
 
-              // KPI Cards
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.4,
-                children: [
-                  KpiCard(
-                    title: 'Ventas del Mes',
-                    value: _currencyFormat.format(metrics.ventasMes),
-                    icon: Icons.trending_up,
-                    color: AppColors.success,
-                    trend: metrics.porcentajeCambioVentas >= 0
-                        ? '+${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%'
-                        : '${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%',
-                    isPositiveTrend: metrics.porcentajeCambioVentas >= 0,
-                  ),
-                  KpiCard(
-                    title: 'Gastos del Mes',
-                    value: _currencyFormat.format(metrics.gastosMes),
-                    icon: Icons.trending_down,
-                    color: AppColors.error,
-                    trend: metrics.porcentajeCambioGastos >= 0
-                        ? '+${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%'
-                        : '${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%',
-                    isPositiveTrend: metrics.porcentajeCambioGastos < 0,
-                  ),
-                  KpiCard(
-                    title: 'Balance',
-                    value: _currencyFormat.format(metrics.gananciaMes),
-                    icon: Icons.account_balance_wallet,
-                    color: metrics.gananciaMes >= 0
-                        ? AppColors.primary
-                        : AppColors.warning,
-                    subtitle: 'Ventas - Gastos',
-                  ),
-                  KpiCard(
-                    title: 'Productos',
-                    value: '${metrics.totalProductos}',
-                    icon: Icons.inventory_2,
-                    color: AppColors.info,
-                    subtitle: metrics.productosStockBajo > 0
-                        ? '${metrics.productosStockBajo} con stock bajo'
-                        : 'Stock adecuado',
-                  ),
-                ],
+              // KPI Cards - Responsive
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Calcular aspect ratio dinámico basado en el ancho
+                  final width = constraints.maxWidth;
+                  double aspectRatio;
+                  if (width < 360) {
+                    aspectRatio = 0.95; // Muy pequeño - más alto
+                  } else if (width < 400) {
+                    aspectRatio = 1.05; // Pequeño
+                  } else {
+                    aspectRatio = 1.2; // Normal
+                  }
+
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: aspectRatio,
+                    children: [
+                      KpiCard(
+                        title: 'Ventas del Mes',
+                        value: _currencyFormat.format(metrics.ventasMes),
+                        icon: Icons.trending_up,
+                        color: AppColors.success,
+                        trend: metrics.porcentajeCambioVentas >= 0
+                            ? '+${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%'
+                            : '${metrics.porcentajeCambioVentas.toStringAsFixed(1)}%',
+                        isPositiveTrend: metrics.porcentajeCambioVentas >= 0,
+                      ),
+                      KpiCard(
+                        title: 'Gastos del Mes',
+                        value: _currencyFormat.format(metrics.gastosMes),
+                        icon: Icons.trending_down,
+                        color: AppColors.error,
+                        trend: metrics.porcentajeCambioGastos >= 0
+                            ? '+${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%'
+                            : '${metrics.porcentajeCambioGastos.toStringAsFixed(1)}%',
+                        isPositiveTrend: metrics.porcentajeCambioGastos < 0,
+                      ),
+                      KpiCard(
+                        title: 'Balance',
+                        value: _currencyFormat.format(metrics.gananciaMes),
+                        icon: Icons.account_balance_wallet,
+                        color: metrics.gananciaMes >= 0
+                            ? AppColors.primary
+                            : AppColors.warning,
+                        subtitle: 'Ventas - Gastos',
+                      ),
+                      KpiCard(
+                        title: 'Productos',
+                        value: '${metrics.totalProductos}',
+                        icon: Icons.inventory_2,
+                        color: AppColors.info,
+                        subtitle: metrics.productosStockBajo > 0
+                            ? '${metrics.productosStockBajo} con stock bajo'
+                            : 'Stock adecuado',
+                      ),
+                    ],
+                  );
+                },
               ),
 
               // Widget de uso del plan

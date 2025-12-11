@@ -98,7 +98,7 @@ class MarketMoveApp extends StatelessWidget {
 }
 
 // Configuración de rutas con GoRouter y control de acceso por roles
-// Solo existen 2 roles: Superadmin y Dueño
+// Roles: Superadmin, Dueño, Empleado
 final GoRouter _router = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) async {
@@ -115,10 +115,11 @@ final GoRouter _router = GoRouter(
     if (isAuthenticated && isLoggingIn) {
       final userRole = await _authService.getCurrentUserRole();
       if (userRole != null) {
-        // Redirigir según el rol: Superadmin o Dueño
+        // Redirigir según el rol
         if (userRole.isSuperadmin) {
           return '/superadmin/dashboard';
-        } else {
+        } else if (userRole.isDueno || userRole.isEmpleado) {
+          // Tanto dueños como empleados van al dashboard admin
           return '/admin/dashboard';
         }
       }
