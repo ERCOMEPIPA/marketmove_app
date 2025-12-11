@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/services/limites_service.dart';
+import '../../../shared/services/email_service.dart';
 import '../../../shared/widgets/plan_usage_widget.dart';
 import '../../../shared/constants/app_colors.dart';
 import '../../../shared/models/user_profile_model.dart';
@@ -17,6 +18,7 @@ class EmpleadosScreen extends StatefulWidget {
 class _EmpleadosScreenState extends State<EmpleadosScreen> {
   final _supabase = Supabase.instance.client;
   final _limitesService = LimitesService();
+  final _emailService = EmailService();
 
   String? _duenoId;
   List<UserProfileModel> _empleados = [];
@@ -296,6 +298,15 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                                 );
                               }
                             }
+
+                            // Enviar email de bienvenida
+                            await _emailService.enviarEmailBienvenida(
+                              empleadoEmail: emailController.text.trim(),
+                              empleadoNombre: nombreController.text.trim(),
+                              negocioNombre:
+                                  'MarketMove', // TODO: Obtener nombre real del negocio
+                              duenoNombre: '', // TODO: Obtener nombre del dueño
+                            );
                           } catch (e) {
                             // Asegurar que restauramos la sesión del dueño
                             if (duenoRefreshToken != null) {

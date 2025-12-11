@@ -1,10 +1,10 @@
-import 'dart:convert';
-import 'dart:io' show File, Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+
+// Importaciones condicionales para soporte multiplataforma
+import 'export_service_stub.dart'
+    if (dart.library.html) 'export_service_web.dart'
+    if (dart.library.io) 'export_service_mobile.dart'
+    as platform_export;
 
 import 'clientes_service.dart';
 import 'deals_service.dart';
@@ -278,57 +278,10 @@ class ExportService {
   /// Exportar archivo - usa método apropiado según la plataforma
   Future<void> _exportarArchivo(String contenido, String nombreArchivo) async {
     try {
-      if (kIsWeb) {
-        // Para web, usamos importación condicional
-        await _exportarArchivoWeb(contenido, nombreArchivo);
-      } else {
-        // Para móvil (Android/iOS), guardamos y compartimos
-        await _exportarArchivoMovil(contenido, nombreArchivo);
-      }
+      await platform_export.exportarArchivo(contenido, nombreArchivo);
     } catch (e) {
       _mostrarMensaje('Error al exportar: $e');
     }
-  }
-
-  /// Exportar archivo en plataformas móviles (Android/iOS)
-  Future<void> _exportarArchivoMovil(
-    String contenido,
-    String nombreArchivo,
-  ) async {
-    try {
-      // Obtener directorio temporal
-      final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/$nombreArchivo';
-
-      // Escribir archivo
-      final file = File(filePath);
-      await file.writeAsString(contenido, encoding: utf8);
-
-      // Compartir archivo
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        subject: 'Exportación: $nombreArchivo',
-        text: 'Archivo CSV exportado desde MarketMove',
-      );
-
-      _mostrarMensaje('Archivo "$nombreArchivo" listo para compartir');
-    } catch (e) {
-      _mostrarMensaje('Error al exportar en móvil: $e');
-    }
-  }
-
-  /// Exportar archivo en web
-  /// Este método solo se ejecuta en web
-  Future<void> _exportarArchivoWeb(
-    String contenido,
-    String nombreArchivo,
-  ) async {
-    // En web, necesitamos usar una importación condicional
-    // Por ahora, mostramos un mensaje ya que la funcionalidad web
-    // requiere imports específicos que no están disponibles en móvil
-    _mostrarMensaje(
-      'La exportación web no está disponible en esta versión móvil',
-    );
   }
 
   /// Mostrar mensaje al usuario (solo imprime por ahora)
