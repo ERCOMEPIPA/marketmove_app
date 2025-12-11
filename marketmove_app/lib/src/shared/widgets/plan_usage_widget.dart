@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/limites_service.dart';
 
 /// Widget que muestra el estado de suscripción y uso del plan
@@ -86,25 +87,23 @@ class PlanUsageWidget extends StatelessWidget {
             Icons.badge,
           ),
 
-          if (onUpgrade != null &&
-              (limites.porcentajeClientes > 0.8 ||
-                  limites.porcentajeEmpleados > 0.8)) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onUpgrade,
-                icon: const Icon(Icons.upgrade, color: Colors.white),
-                label: const Text(
-                  'Actualizar Plan',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white),
-                ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                context.go('/admin/planes');
+              },
+              icon: const Icon(Icons.upgrade, color: Colors.white),
+              label: const Text(
+                'Actualizar Plan',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );

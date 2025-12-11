@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/producto_model.dart';
+import '../constants/categorias_predefinidas.dart';
 
 /// Servicio para gestionar productos con estado reactivo
 class ProductosService extends ChangeNotifier {
@@ -47,27 +48,32 @@ class ProductosService extends ChangeNotifier {
           categoriaSet.add(p.categoria!.nombre);
         }
       }
-      
+
       _categorias = categoriaSet
-          .map((name) => CategoriaModel(
-                id: '',
-                userId: negocioId,
-                nombre: name,
-                tipo: 'producto',
-                color: '#6366f1',
-                createdAt: DateTime.now(),
-              ))
+          .map(
+            (name) => CategoriaModel(
+              id: '',
+              userId: negocioId,
+              nombre: name,
+              tipo: 'producto',
+              color: '#6366f1',
+              createdAt: DateTime.now(),
+            ),
+          )
           .toList();
-      
+
       // Agregar "Todos" al inicio
-      _categorias.insert(0, CategoriaModel(
-        id: '',
-        userId: negocioId,
-        nombre: 'Todos',
-        tipo: 'producto',
-        color: '#6366f1',
-        createdAt: DateTime.now(),
-      ));
+      _categorias.insert(
+        0,
+        CategoriaModel(
+          id: '',
+          userId: negocioId,
+          nombre: 'Todos',
+          tipo: 'producto',
+          color: '#6366f1',
+          createdAt: DateTime.now(),
+        ),
+      );
 
       _applyFilters();
       _error = null;
@@ -97,11 +103,12 @@ class ProductosService extends ChangeNotifier {
   /// Aplica filtros de categoría y búsqueda
   void _applyFilters() {
     _productosFiltrados = _productos.where((producto) {
-      final matchCategory = _selectedCategory == 'Todos' ||
+      final matchCategory =
+          _selectedCategory == 'Todos' ||
           producto.categoria?.nombre == _selectedCategory;
-      final matchSearch = producto.nombre
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase());
+      final matchSearch = producto.nombre.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
       return matchCategory && matchSearch;
     }).toList();
   }
@@ -300,9 +307,12 @@ class ProductosService extends ChangeNotifier {
     }
   }
 
-  /// Obtiene categorías de productos
+  /// Obtiene categorías de productos, incluyendo las predefinidas
   Future<List<CategoriaModel>> getCategorias(String userId) async {
     try {
+      // Primero asegurar que las categorías predefinidas existan
+      await _asegurarCategoriasPredefinidas(userId);
+
       final response = await _supabase
           .from('categorias')
           .select()
@@ -315,6 +325,37 @@ class ProductosService extends ChangeNotifier {
           .toList();
     } catch (e) {
       throw Exception('Error al obtener categorías: $e');
+    }
+  }
+
+  /// Asegura que las categorías predefinidas existan para el usuario
+  Future<void> _asegurarCategoriasPredefinidas(String userId) async {
+    try {
+      // Obtener categorías existentes
+      final existentes = await _supabase
+          .from('categorias')
+          .select('nombre')
+          .eq('user_id', userId)
+          .eq('tipo', 'producto');
+
+      final nombresExistentes = (existentes as List)
+          .map((c) => c['nombre'] as String)
+          .toSet();
+
+      // Insertar las que falten
+      for (final nombre in categoriasProductosPredefinidas) {
+        if (!nombresExistentes.contains(nombre)) {
+          await _supabase.from('categorias').insert({
+            'user_id': userId,
+            'nombre': nombre,
+            'tipo': 'producto',
+            'color': '#6366f1',
+          });
+        }
+      }
+    } catch (e) {
+      // Si falla, continuar sin las predefinidas
+      debugPrint('Error al insertar categorías predefinidas: $e');
     }
   }
 

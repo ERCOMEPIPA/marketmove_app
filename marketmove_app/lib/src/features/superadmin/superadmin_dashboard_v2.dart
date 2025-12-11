@@ -215,6 +215,7 @@ class _SuperadminDashboardV2State extends State<SuperadminDashboardV2> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -253,6 +254,7 @@ class _SuperadminDashboardV2State extends State<SuperadminDashboardV2> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F2937),
                           ),
                         ),
                         TextButton(
@@ -283,6 +285,7 @@ class _SuperadminDashboardV2State extends State<SuperadminDashboardV2> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F2937),
                           ),
                         ),
                         TextButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/services/limites_service.dart';
 import '../../../shared/services/email_service.dart';
@@ -105,7 +106,7 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Navegar a pantalla de planes
+              GoRouter.of(context).go('/admin/planes');
             },
             child: const Text('Ver Planes'),
           ),

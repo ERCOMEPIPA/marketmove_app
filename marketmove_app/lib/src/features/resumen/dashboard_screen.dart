@@ -199,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 PlanUsageWidget(
                   limites: _planLimites!,
                   onUpgrade: () {
-                    // TODO: Navegar a pantalla de planes
+                    context.go('/admin/planes');
                   },
                 ),
               ],

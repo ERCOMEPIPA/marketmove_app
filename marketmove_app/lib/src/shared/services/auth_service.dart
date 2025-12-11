@@ -62,6 +62,19 @@ class AuthService {
         throw Exception('Error al registrar usuario');
       }
 
+      final userId = response.user!.id;
+
+      // Si es un dueño, crear el registro en la tabla negocios
+      if (rol == UserRole.dueno) {
+        await _supabase.from('negocios').upsert({
+          'id': userId,
+          'nombre': nombreNegocio ?? email,
+          'email': email,
+          'dueno_id': userId,
+          'activo': true,
+        });
+      }
+
       // Actualizar el perfil con información adicional
       await _supabase
           .from('perfiles')
@@ -69,16 +82,17 @@ class AuthService {
             'nombre_negocio': nombreNegocio,
             'telefono': telefono,
             'rol': rol.toStringValue(),
+            if (rol == UserRole.dueno) 'negocio_id': userId,
           })
-          .eq('id', response.user!.id);
+          .eq('id', userId);
 
       // Si es un dueño, asignar plan básico automáticamente
       if (rol == UserRole.dueno) {
-        await _asignarPlanBasico(response.user!.id);
+        await _asignarPlanBasico(userId);
       }
 
       // Obtener el perfil actualizado
-      final profile = await getUserProfile(response.user!.id);
+      final profile = await getUserProfile(userId);
 
       return profile;
     } catch (e) {

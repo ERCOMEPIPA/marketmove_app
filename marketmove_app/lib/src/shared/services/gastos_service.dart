@@ -1,8 +1,10 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/gasto_model.dart';
 import '../models/producto_model.dart'; // For CategoriaModel
 import '../models/venta_model.dart'; // For MetodoPago
+import '../constants/categorias_predefinidas.dart';
 
 /// Servicio para gestionar gastos
 class GastosService {
@@ -147,9 +149,12 @@ class GastosService {
     }
   }
 
-  /// Obtiene categorías de gastos
+  /// Obtiene categorías de gastos, incluyendo las predefinidas
   Future<List<CategoriaModel>> getCategoriasGastos(String userId) async {
     try {
+      // Primero asegurar que las categorías predefinidas existan
+      await _asegurarCategoriasPredefinidas(userId);
+
       final response = await _supabase
           .from('categorias')
           .select()
@@ -162,6 +167,37 @@ class GastosService {
           .toList();
     } catch (e) {
       throw Exception('Error al obtener categorías de gastos: $e');
+    }
+  }
+
+  /// Asegura que las categorías predefinidas existan para el usuario
+  Future<void> _asegurarCategoriasPredefinidas(String userId) async {
+    try {
+      // Obtener categorías existentes
+      final existentes = await _supabase
+          .from('categorias')
+          .select('nombre')
+          .eq('user_id', userId)
+          .eq('tipo', 'gasto');
+
+      final nombresExistentes = (existentes as List)
+          .map((c) => c['nombre'] as String)
+          .toSet();
+
+      // Insertar las que falten
+      for (final nombre in categoriasGastosPredefinidas) {
+        if (!nombresExistentes.contains(nombre)) {
+          await _supabase.from('categorias').insert({
+            'user_id': userId,
+            'nombre': nombre,
+            'tipo': 'gasto',
+            'color': '#ef4444',
+          });
+        }
+      }
+    } catch (e) {
+      // Si falla, continuar sin las predefinidas
+      debugPrint('Error al insertar categorías predefinidas de gastos: $e');
     }
   }
 

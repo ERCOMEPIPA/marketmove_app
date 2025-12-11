@@ -18,10 +18,12 @@ class StripeService {
 
   /// Crea una sesión de Stripe Checkout para suscribirse a un plan
   /// Retorna la URL del checkout o null si hay error
+  /// [isOneTime] indica si es pago único (lifetime) o suscripción recurrente
   Future<String?> createCheckoutSession({
     required String priceId,
     required String successUrl,
     required String cancelUrl,
+    bool isOneTime = false,
   }) async {
     try {
       final response = await _supabase.functions.invoke(
@@ -30,6 +32,7 @@ class StripeService {
           'priceId': priceId,
           'successUrl': successUrl,
           'cancelUrl': cancelUrl,
+          'mode': isOneTime ? 'payment' : 'subscription',
         },
       );
 
@@ -45,28 +48,41 @@ class StripeService {
   }
 
   /// Abre el checkout de Stripe en el navegador
+  /// [isOneTime] indica si es pago único (lifetime) o suscripción recurrente
   Future<bool> openCheckout({
     required String priceId,
     String? successUrl,
     String? cancelUrl,
+    bool isOneTime = false,
   }) async {
     try {
+      print(
+        '🔵 Stripe: Iniciando checkout con priceId: $priceId (oneTime: $isOneTime)',
+      );
       final currentUrl = Uri.base.toString();
       final checkoutUrl = await createCheckoutSession(
         priceId: priceId,
         successUrl: successUrl ?? '$currentUrl?success=true',
         cancelUrl: cancelUrl ?? '$currentUrl?canceled=true',
+        isOneTime: isOneTime,
       );
 
-      if (checkoutUrl == null) return false;
+      print('🔵 Stripe: URL de checkout recibida: $checkoutUrl');
+
+      if (checkoutUrl == null) {
+        print('🔴 Stripe: checkoutUrl es null');
+        return false;
+      }
 
       final uri = Uri.parse(checkoutUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         return true;
       }
+      print('🔴 Stripe: No se puede lanzar la URL');
       return false;
     } catch (e) {
+      print('🔴 Stripe: Error en openCheckout: $e');
       return false;
     }
   }

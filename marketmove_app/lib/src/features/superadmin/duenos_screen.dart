@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../shared/services/planes_service.dart';
 import '../../shared/constants/app_colors.dart';
@@ -78,13 +79,29 @@ class _DuenosScreenState extends State<DuenosScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Gestión de Negocios',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          // Botón de retroceso
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () =>
+                                    context.go('/superadmin/dashboard'),
+                                icon: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                ),
+                                tooltip: 'Volver',
+                              ),
+                              const Expanded(
+                                child: Text(
+                                  'Gestión de Negocios',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(

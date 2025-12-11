@@ -65,6 +65,7 @@ class _SeleccionPlanScreenState extends State<SeleccionPlanScreen> {
     try {
       final success = await _stripeService.openCheckout(
         priceId: plan.stripePriceId!,
+        isOneTime: plan.esPagoUnico,
       );
 
       if (!success && mounted) {
