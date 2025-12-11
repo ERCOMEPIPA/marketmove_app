@@ -14,6 +14,7 @@ import 'src/features/admin/pipeline/pipeline_screen.dart';
 import 'src/features/admin/empleados/empleados_screen.dart';
 import 'src/features/superadmin/superadmin_dashboard_v2.dart';
 import 'src/features/superadmin/planes_screen.dart';
+import 'src/features/superadmin/duenos_screen.dart';
 import 'src/features/admin/planes/seleccion_plan_screen.dart';
 import 'src/features/notificaciones/notificaciones_screen.dart';
 import 'src/features/settings/settings_screen.dart';
@@ -154,8 +155,7 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: '/superadmin/duenos',
           name: 'superadmin_duenos',
-          builder: (context, state) =>
-              const SuperadminDashboardV2(), // Mismo dashboard muestra dueños
+          builder: (context, state) => const DuenosScreen(),
         ),
         GoRoute(
           path: '/superadmin/planes',
