@@ -116,8 +116,9 @@ class NotificationService extends ChangeNotifier {
       // Solo verificar deals activos con fecha de cierre
       if (deal.fechaCierreEstimada == null) continue;
       if (deal.etapa == EtapasPipeline.ganado ||
-          deal.etapa == EtapasPipeline.perdido)
+          deal.etapa == EtapasPipeline.perdido) {
         continue;
+      }
 
       // Ya notificado este deal?
       if (_dealsNotificados.contains(deal.id)) continue;

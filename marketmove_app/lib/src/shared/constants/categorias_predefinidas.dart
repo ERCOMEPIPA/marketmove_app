@@ -1,5 +1,6 @@
 /// Categorías predefinidas para productos y gastos
 /// Estas categorías están siempre disponibles sin necesidad de crearlas
+library;
 
 /// Categorías predefinidas para productos
 const List<String> categoriasProductosPredefinidas = [
